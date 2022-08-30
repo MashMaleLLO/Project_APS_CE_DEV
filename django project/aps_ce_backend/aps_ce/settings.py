@@ -75,28 +75,10 @@ WSGI_APPLICATION = 'aps_ce.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.mysql',
+        'ENGINE': 'django.db.backends.sqlite3',
         'NAME': 'mydatabase',
-        'USER': 'moondamon',
-        'PASSWORD': 'moon10392',
-        'HOST': '127.0.0.1',
-        'PORT': '3306',
-        #optional:
-        'OPTIONS': {
-            'charset' : 'utf8',
-            'use_unicode' : True,
-             'init_command': 'SET '
-                'storage_engine=INNODB,'
-                'character_set_connection=utf8,'
-                'collation_connection=utf8_bin'
-                #'sql_mode=STRICT_TRANS_TABLES,'    # see note below
-                #'SESSION TRANSACTION ISOLATION LEVEL READ COMMITTED',
-        },
-        'TEST_CHARSET': 'utf8',
-        'TEST_COLLATION': 'utf8_general_ci',
     }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/4.0/ref/settings/#auth-password-validators
