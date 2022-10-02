@@ -27,5 +27,7 @@ urlpatterns = [
     url(r'^downloadCsv',view.csvDownload),
     
     url(r'^students$',recc.studentApi),
-    url(r'^students/(?P<id>\w+)$',recc.studentApi)
+    url(r'^students/(?P<id>\w+)$',recc.studentApi),
+
+    url(r'^getModel$', recc.generateModel),
 ]

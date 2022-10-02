@@ -8,6 +8,7 @@ from .serializers import StudentSerializer
 
 import re
 import requests
+import pandas as pd
 from pandasql import sqldf
 
 def catch():
@@ -21,7 +22,7 @@ def studentApi(request,id=0):
         if id == 0:
             students = Student.objects.all()
             students_serializer = StudentSerializer(students,many=True)
-            return JsonResponse(students_serializer.data, safe=False)
+            return JsonResponse(students_serializer.data, safe=False, json_dumps_params={'ensure_ascii': False})
         else:
             student = Student.objects.get(student_id=id)
             student_serializer = StudentSerializer(student)
@@ -57,8 +58,75 @@ def addStudent(df):
     res = 'Complete add' 
     return res
 
+def queryBycurriculum(df):
+  curriculums = list(df["curriculum"].unique())
+  dfs = {}
+  for i in curriculums:
+    q = "SELECT * FROM df WHERE curriculum = '{0}'".format(i)
+    temp = sqldf(q)
+    dic = {i:[]}
+    dic[i].append(temp)
+    dfs.update(dic)
+  return dfs
+
+
+def transfromGrade(df):
+  df.loc[df["grade"] == "A", "grade"] = 4
+  df.loc[df["grade"] == "S", "grade"] = 4
+  df.loc[df["grade"] == "T(A)", "grade"] = 4
+
+  df.loc[df["grade"] == "B+", "grade"] = 3.5
+  df.loc[df["grade"] == "T(B+)", "grade"] = 3.5
+
+  df.loc[df["grade"] == "B+", "grade"] = 3.5
+  df.loc[df["grade"] == "T(B+)", "grade"] = 3.5
+
+  df.loc[df["grade"] == "B", "grade"] = 3
+  df.loc[df["grade"] == "T(B)", "grade"] = 3
+
+  df.loc[df["grade"] == "C+", "grade"] = 2.5
+  df.loc[df["grade"] == "T(C+)", "grade"] = 2.5
+
+  df.loc[df["grade"] == "C", "grade"] = 2
+  df.loc[df["grade"] == "T(C)", "grade"] = 2
+
+  df.loc[df["grade"] == "D+", "grade"] = 1.5
+  df.loc[df["grade"] == "T(D+)", "grade"] = 1.5
+
+  df.loc[df["grade"] == "D", "grade"] = 1
+  df.loc[df["grade"] == "T(D)", "grade"] = 1
+
+  df.loc[df["grade"] == "F", "grade"] = 0
+  df.loc[df["grade"] == "T(F)", "grade"] = 0
+  df.loc[df["grade"] == "U", "grade"] = 0
+
+  return df
+
+
+def transfromAlldfs(dfs):
+  for i in dfs:
+    dfs[i][0] = transfromGrade(dfs[i][0])
+  return dfs
+
+
+@csrf_exempt
 def generateModel(request):
-    return JsonResponse('HI', safe=False)
+    qdata = list(Student.objects.all().values())
+    df = pd.DataFrame(qdata)
+    dfs = queryBycurriculum(df)
+    dfs = transfromAlldfs(dfs)
+    
+    # Check Function QueryByCurriculum------------------
+    # temp = {}
+    # for i in dfs:
+    #     a = dfs[i][0]
+    #     # a = a.head()
+    #     print(a['grade'])
+    #     a = a.values.tolist()
+    #     di = {i:a}
+    #     temp.update(di)
+
+    return JsonResponse(temp , safe=False, json_dumps_params={'ensure_ascii': False})
 
         
 

@@ -9,3 +9,8 @@ class Student(models.Model):
       year = models.CharField(max_length=10)
       curriculum = models.CharField(max_length=100)
 
+# class Subject_Data(models.Model):
+#       subject_id = models.CharField(max_length=300)
+#       subject_name_thai = models.CharField(max_length=600)
+#       subject_name_eng = models.CharField(max_length=500)
+#       abstract
