@@ -17,6 +17,7 @@ from django.contrib import admin
 from django.urls import path,include
 from django.urls import re_path as url
 from backend import view
+from recommend import views as recc
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -24,4 +25,5 @@ urlpatterns = [
     url(r'^throw', view.Throw),
     url(r'^test', view.csvHandler),
     url(r'^downloadCsv',view.csvDownload),
+    url(r'^students',recc.getAllStudent)
 ]
