@@ -13,4 +13,4 @@ class Student(models.Model):
 #       subject_id = models.CharField(max_length=300)
 #       subject_name_thai = models.CharField(max_length=600)
 #       subject_name_eng = models.CharField(max_length=500)
-#       abstract
+#       abstract = models.CharField(max_length=3000)
