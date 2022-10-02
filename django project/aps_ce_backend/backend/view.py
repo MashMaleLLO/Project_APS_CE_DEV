@@ -17,21 +17,19 @@ def Throw(request):
 @csrf_exempt
 def csvHandler(request):
     csv_file = request.FILES['path_to_csv']
-    df = pd.read_csv(csv_file, encoding='utf-8')
+    df = pd.read_csv(csv_file, dtype={0:'string',1:'string', 2:'string', 3:'string', 4:'string', 5:'string'}, encoding='utf-8')
     df = df.head()
-    df = df.reset_index()  # make sure indexes pair with number of rows
+    print(df)
     lis = []
     for index, row in df.iterrows():
-        dic = {
-            "StudentID":row['student_id'],
-            "SubjectID":row['subject_id'],
-            "Grade":row['grade'],
-            "Semester":row['semester'],
-            "Year":row['year'],
-            "Curriculum":row['curriculum']
-        }
-        lis.append(dic)
-    return JsonResponse(lis, safe=False)
+        strt = '0'
+        subId = row['subject_id']
+        if len(subId) < 8:
+            strt += row['subject_id']
+            subId = strt
+        df.at[index, 'subject_id'] = subId
+    res = recc.addStudent(df)
+    return JsonResponse(res, safe=False)
 
 def csvDownload(request):
     response = HttpResponse(content_type='text/csv')

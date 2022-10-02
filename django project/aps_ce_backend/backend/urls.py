@@ -25,5 +25,7 @@ urlpatterns = [
     url(r'^throw', view.Throw),
     url(r'^test', view.csvHandler),
     url(r'^downloadCsv',view.csvDownload),
-    url(r'^students',recc.getAllStudent)
+    
+    url(r'^students$',recc.studentApi),
+    url(r'^students/(?P<id>\w+)$',recc.studentApi)
 ]
