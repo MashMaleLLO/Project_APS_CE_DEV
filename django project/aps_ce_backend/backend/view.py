@@ -18,7 +18,6 @@ def Throw(request):
 def csvHandler(request):
     csv_file = request.FILES['path_to_csv']
     df = pd.read_csv(csv_file, dtype={0:'string',1:'string', 2:'string', 3:'string', 4:'string', 5:'string'}, encoding='utf-8')
-    df = df.head()
     print(df)
     lis = []
     for index, row in df.iterrows():
