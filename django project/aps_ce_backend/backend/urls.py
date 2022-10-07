@@ -14,7 +14,7 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path,include
+from django.urls import path
 from django.urls import re_path as url
 from backend import view
 from recommend import views as recc
@@ -30,4 +30,8 @@ urlpatterns = [
     url(r'^students/(?P<id>\w+)$',recc.studentApi),
 
     url(r'^getModel$', recc.generateModel),
+
+    url(r'^uploadSubject$', view.csvHandlerSubject),
+    url(r'^subjects$',recc.subjectApi),
+    url(r'^subjects/(?P<id>\w+)$',recc.subjectApi),
 ]

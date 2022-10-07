@@ -2,8 +2,8 @@ from operator import index
 from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
 from django.http.response import JsonResponse
-from .models import Student
-from .serializers import StudentSerializer
+from .models import Student, Subject_Data
+from .serializers import StudentSerializer, SubjectSerializer
 # Create your views here.
 
 import re
@@ -26,7 +26,21 @@ def studentApi(request,id=0):
         else:
             student = Student.objects.get(student_id=id)
             student_serializer = StudentSerializer(student)
-            return JsonResponse(student_serializer.data, safe=False)
+            return JsonResponse(student_serializer.data, safe=False, json_dumps_params={'ensure_ascii': False})
+
+@csrf_exempt
+def subjectApi(requset,id=0):
+  if requset.method == 'GET':
+    print(id)
+    if id == 0:
+      subjects = Subject_Data.objects.all()
+      subjects_serializer = SubjectSerializer(subjects, many=True)
+      return JsonResponse(subjects_serializer.data, safe=False, json_dumps_params={'ensure_ascii': False})
+    else:
+      subject = Subject_Data.objects.get(subject_id = id)
+      subject_serializer = SubjectSerializer(subject)
+      return JsonResponse(subject_serializer.data, safe=False, json_dumps_params={'ensure_ascii': False})
+
 
 
 def dropUnUseRecc(df):
@@ -51,6 +65,37 @@ def addStudent(df):
         if student_serializer.is_valid():
             student_serializer.save()
             print(f'save {student_serializer.data}')
+        else:
+            res = "Failed to add"
+            print(res)
+            return res
+    res = 'Complete add' 
+    return res
+
+def addSubjectClasstoDF(thisdict, subject_id):
+  for i in thisdict:
+    if subject_id in thisdict[i]:
+      return i
+  return 'อื่นๆ'
+
+@csrf_exempt
+def addSubject(df, thisdict):
+    df['subject_key'] = df['subject_key'].fillna('อื่นๆ')
+    for index,subject in df.iterrows():
+        subject_class = addSubjectClasstoDF(thisdict, subject['subject_id'])
+        dic = {
+            "subject_id":subject['subject_id'],
+            "subject_name_thai":subject['subject_name_thai'],
+            "subject_name_eng":subject['subject_name_eng'],
+            "abstract":subject['abstract'],
+            "subject_key":subject['subject_key'],
+            "year":subject['year'],
+            "subject_class": subject_class
+        }
+        subject_serializer = SubjectSerializer(data=dic)
+        if subject_serializer.is_valid():
+            subject_serializer.save()
+            print(f'save {subject_serializer.data}')
         else:
             res = "Failed to add"
             print(res)
@@ -107,6 +152,8 @@ def transfromAlldfs(dfs):
   for i in dfs:
     dfs[i][0] = transfromGrade(dfs[i][0])
   return dfs
+
+
 
 
 @csrf_exempt
