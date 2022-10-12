@@ -34,4 +34,7 @@ urlpatterns = [
     url(r'^uploadSubject$', view.csvHandlerSubject),
     url(r'^subjects$',recc.subjectApi),
     url(r'^subjects/(?P<id>\w+)$',recc.subjectApi),
+
+    url(r'^reqAna/(?P<curri>\w+)$', view.csv2560Download),
+    url(r'^reqPredict$', view.gradeUploader),
 ]

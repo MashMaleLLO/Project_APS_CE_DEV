@@ -1,8 +1,10 @@
+import re
 from urllib import response
-from django.shortcuts import render
 from django.http.response import JsonResponse
 from django.http import HttpResponse
 from recommend import views as recc
+from recommend.models import Student, Subject_Data
+from recommend.serializers import StudentSerializer, SubjectSerializer
 import pandas as pd
 import csv
 from django.views.decorators.csrf import csrf_exempt
@@ -101,5 +103,45 @@ def csvDownload(request):
     writer.writerow(['Fname','Lname','Nname'])
     response['Content-Disposition'] = 'attachment; filename="APS_CE.csv"'
     return response
+
+@csrf_exempt
+def csv2560Download(request, curri):
+    subjects = list(Subject_Data.objects.all().values())
+    if curri == 'computer':
+        response = HttpResponse(content_type='text/csv')
+        writer = csv.writer(response)
+        writer.writerow(['student_id','subject_id','grade', 'semester', 'year', 'curriculum'])
+        for i in subjects:
+            writer.writerow(['Optional',i['subject_id'],'Your Grade', 'Optional', 'Optional', 'วิศวกรรมคอมพิวเตอร์'])
+        response['Content-Disposition'] = 'attachment; filename="2560fileformat.csv"'
+    else:
+        response = HttpResponse(content_type='text/csv')
+        writer = csv.writer(response)
+        writer.writerow(['student_id','subject_id','grade', 'semester', 'year', 'curriculum'])
+        for i in subjects:
+            writer.writerow(['Optional',i['subject_id'],'Your Grade', 'Optional', 'Optional', 'วิศวกรรมคอมพิวเตอร์'])
+        response['Content-Disposition'] = 'attachment; filename="2560fileformat.csv"'
+    return response
+
+
+@csrf_exempt
+def gradeUploader(request):
+    csv_file = request.FILES['path_to_csv']
+    df = pd.read_csv(csv_file, dtype={0:'string',1:'string', 2:'string', 3:'string', 4:'string', 5:'string'}, encoding='utf-8')
+    lis = []
+    for index, row in df.iterrows():
+        strt = '0'
+        subId = row['subject_id']
+        grade = row['grade']
+        if len(subId) < 8:
+            strt += row['subject_id']
+            subId = strt
+        df.at[index, 'subject_id'] = subId
+        if grade == 'Your Grade':
+            df.at[index, 'grade'] = 'Zero'
+    response = recc.generatePredictionForUser(df)
+    for i in range(len(response)):
+        print(response[i])
+    return JsonResponse(response, safe=False)
 
 
