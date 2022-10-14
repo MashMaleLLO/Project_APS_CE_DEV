@@ -29,12 +29,12 @@ urlpatterns = [
     url(r'^students$',recc.studentApi),
     url(r'^students/(?P<id>\w+)$',recc.studentApi),
 
-    url(r'^getModel$', recc.generateModel),
+    # url(r'^getModel$', recc.generateModel),
 
     url(r'^uploadSubject$', view.csvHandlerSubject),
     url(r'^subjects$',recc.subjectApi),
     url(r'^subjects/(?P<id>\w+)$',recc.subjectApi),
 
     url(r'^reqAna/(?P<curri>\w+)$', view.csv2560Download),
-    url(r'^reqPredict$', view.gradeUploader),
+    url(r'^reqPredict/(?P<pred>\w+)$', view.gradeUploader),
 ]

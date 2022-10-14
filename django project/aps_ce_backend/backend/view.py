@@ -125,7 +125,7 @@ def csv2560Download(request, curri):
 
 
 @csrf_exempt
-def gradeUploader(request):
+def gradeUploader(request, pred):
     csv_file = request.FILES['path_to_csv']
     df = pd.read_csv(csv_file, dtype={0:'string',1:'string', 2:'string', 3:'string', 4:'string', 5:'string'}, encoding='utf-8')
     lis = []
@@ -139,7 +139,12 @@ def gradeUploader(request):
         df.at[index, 'subject_id'] = subId
         if grade == 'Your Grade':
             df.at[index, 'grade'] = 'Zero'
-    response = recc.generatePredictionForUser(df)
+    if pred == 'Grade':
+        response = recc.generatePredictionForUserByGrade(df)
+    elif pred == 'Class':
+        response = recc.generatePredictionForUserByClass(df)
+    else:
+        response = 'ERROR'
     for i in range(len(response)):
         print(response[i])
     return JsonResponse(response, safe=False)

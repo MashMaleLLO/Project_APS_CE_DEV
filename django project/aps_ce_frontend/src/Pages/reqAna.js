@@ -15,7 +15,7 @@ const ReqAna = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     async function fetchData() {
-      let res = await axios.post("http://localhost:8000/reqPredict", formData);
+      let res = await axios.post("http://localhost:8000/reqPredict/" + e.target.pred.value, formData);
       console.log(res.data);
     }
 
@@ -45,6 +45,10 @@ const ReqAna = () => {
     <div className="flex flex-col gap-6 justify-center items-center h-screen">
       <h1>Upload your grade CSV (Save file as CSV-UTF-8)</h1>
       <form onSubmit={handleSubmit}>
+        <select name='pred'>
+          <option value="Grade">Predict By Grade</option>
+          <option value="Class">Predict By Class</option>
+        </select>
         <input type="file" accept=".csv" onChange={handleChange} />
         <button
           type="submit"
