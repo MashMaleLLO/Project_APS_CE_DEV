@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import axios from "axios";
+import PersonList from "./temp";
 
 const ReqAna = () => {
   let formData = new FormData();
@@ -14,8 +15,9 @@ const ReqAna = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    console.log(e.target.model.value)
     async function fetchData() {
-      let res = await axios.post("http://localhost:8000/reqPredict/" + e.target.pred.value, formData);
+      let res = await axios.post("http://localhost:8000/reqPredict/" + e.target.model.value, formData);
       console.log(res.data);
     }
 
@@ -45,10 +47,11 @@ const ReqAna = () => {
     <div className="flex flex-col gap-6 justify-center items-center h-screen">
       <h1>Upload your grade CSV (Save file as CSV-UTF-8)</h1>
       <form onSubmit={handleSubmit}>
-        <select name='pred'>
+        <PersonList></PersonList>
+        {/* <select name='pred'>
           <option value="Grade">Predict By Grade</option>
           <option value="Class">Predict By Class</option>
-        </select>
+        </select> */}
         <input type="file" accept=".csv" onChange={handleChange} />
         <button
           type="submit"
@@ -65,7 +68,6 @@ const ReqAna = () => {
         </select>
         <button type="submit">Download CSV Format For subject 2560</button>
       </form>
-      
     </div>
   );
 };

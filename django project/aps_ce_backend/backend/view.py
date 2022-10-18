@@ -97,6 +97,7 @@ def csvHandlerSubject(request):
     res = recc.addSubject(df_subject_pre_nlp, thisdict)
     return JsonResponse(res, safe=False)
 
+
 def csvDownload(request):
     response = HttpResponse(content_type='text/csv')
     writer = csv.writer(response)
@@ -125,9 +126,9 @@ def csv2560Download(request, curri):
 
 
 @csrf_exempt
-def gradeUploader(request, pred):
+def gradeUploader(request, model):
     csv_file = request.FILES['path_to_csv']
-    df = pd.read_csv(csv_file, dtype={0:'string',1:'string', 2:'string', 3:'string', 4:'string', 5:'string'}, encoding='utf-8')
+    df = pd.read_csv(csv_file, dtype={0:'string',1:'string', 3:'string', 4:'string', 5:'string'}, encoding='utf-8')
     lis = []
     for index, row in df.iterrows():
         strt = '0'
@@ -139,14 +140,9 @@ def gradeUploader(request, pred):
         df.at[index, 'subject_id'] = subId
         if grade == 'Your Grade':
             df.at[index, 'grade'] = 'Zero'
-    if pred == 'Grade':
-        response = recc.generatePredictionForUserByGrade(df)
-    elif pred == 'Class':
-        response = recc.generatePredictionForUserByClass(df)
-    else:
-        response = 'ERROR'
-    for i in range(len(response)):
-        print(response[i])
-    return JsonResponse(response, safe=False)
+    response = recc.reqPredictPerUser(df, model)
+    for i in response:
+        print(i)
+    return JsonResponse("Hi", safe=False)
 
 

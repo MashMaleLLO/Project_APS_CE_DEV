@@ -1,7 +1,8 @@
+from pyexpat import model
 from urllib import response
 from django.views.decorators.csrf import csrf_exempt
 from django.http.response import JsonResponse
-from .models import Student, Subject_Data
+from .models import Student, Subject_Data, SurpriseModel
 from .serializers import StudentSerializer, SubjectSerializer
 # Create your views here.
 
@@ -11,7 +12,9 @@ import re
 import requests
 import pandas as pd
 from pandasql import sqldf
-
+import pickle as cPickle
+import json
+import joblib
 
 from surprise import Dataset
 from surprise import Reader
@@ -21,10 +24,28 @@ from surprise.model_selection import train_test_split
 from surprise.model_selection import GridSearchCV
 import numpy as np
 
-
 def catch():
     lis = ['a','b','c']
     return lis
+
+@csrf_exempt
+def surpriseModel(request,id=0):
+    if request.method=='GET':
+        print(id)
+        if id == 0:
+            res = []
+            model = list(SurpriseModel.objects.all().values())
+            for i in model:
+              dic = {
+                "id": i['id'],
+                "name" : i['args']['name'],
+                "rmse" : i['args']['rmse'],
+                "curriculum": i['args']['curriculum'],
+                "type":i['args']['type']
+              }
+              res.append(dic)
+            return JsonResponse(res, safe=False, json_dumps_params={'ensure_ascii': False})
+    return JsonResponse("BAD REQUEST", safe=False)
 
 @csrf_exempt
 def studentApi(request,id=0):
@@ -249,274 +270,143 @@ def passDFStoFunc(dfs, student_id_lis, thisdict, byWhat):
 
 
 
-# @csrf_exempt
-# def generateModel(request):
-#     qdata = list(Student.objects.all().values())
-#     q_subject_data = list(Subject_Data.objects.all().values())
-#     df_subject = pd.DataFrame(q_subject_data)
-#     thisdict = genSubjectDict(df_subject)
-#     df = pd.DataFrame(qdata)
-#     dfs = queryBycurriculum(df)
-#     dfs = transfromAlldfs(dfs)
-#     for i in dfs:
-#       temp = dfs[i][0]
-#       temp = temp[temp.grade != 'Zero']
-#       dfs[i].append(temp)
-#     # q_subjectClassAndsubId = 'SELECT subject_id, subject_class from df_subject;'
-#     # df_subject = sqldf(q_subjectClassAndsubId)
-#     for j in dfs:
-#       dfs[j][0]['subject_class'] = dfs[j][0].apply (lambda row: findSubjectClass(row['subject_id'], thisdict), axis=1)
-#       dfs[j][1]['subject_class'] = dfs[j][0].apply (lambda row: findSubjectClass(row['subject_id'], thisdict), axis=1)
-#       # casttemp = dfs[j][1]
-#       # casttemp[["grade"]] = casttemp[["grade"]].apply(pd.to_numeric)
-#       # dfs[j][1] = casttemp
-#     for k in dfs:
-#       tempAVG = dfs[k][1]
-#       q_find_AVG = "SELECT student_id, AVG(grade) as grade, semester, year, curriculum, subject_class FROM tempAVG GROUP BY subject_class, student_id ORDER BY student_id"
-#       tempDFS_AVG = sqldf(q_find_AVG)
-#       dfs[k][1] = tempDFS_AVG
-#     min_rating = 0
-#     max_rating = 4
-#     reader = Reader(rating_scale=(min_rating, max_rating))
-#     param_grid = {
-#       'n_factors': [20, 50, 100],
-#       'n_epochs': [5, 10, 20]
-#       }
-#     for i in dfs:
-#       data = Dataset.load_from_df(dfs[i][1][['student_id', 'subject_class', 'grade']], reader)
-#       svd = SVD(n_epochs=10)
-#       results = cross_validate(svd, data, measures=['RMSE', 'MAE'], cv=10, verbose=True)
-#       gs = GridSearchCV(SVD, param_grid, measures=['rmse', 'mae'], cv=10)
-#       gs.fit(data)
-#       best_factor = gs.best_params['rmse']['n_factors']
-#       best_epoch = gs.best_params['rmse']['n_epochs']
-#       trainset, testset = train_test_split(data, test_size=.20)
-#       svd = SVD(n_factors=best_factor, n_epochs=best_epoch)
-#       svd.fit(trainset)
-#       print(gs.best_score['rmse'])
-#       dfs[i].append(svd)
-#     student_id_lis = addFullCSVtoDFS(dfs)
-#     dfs = passDFStoFunc(dfs, student_id_lis, thisdict)
-#     # testDDDDD = dfs["วิศวกรรมคอมพิวเตอร์"][3].head()
-#     print(dfs["วิศวกรรมคอมพิวเตอร์"][3]['subject_class'].unique())
-#     return JsonResponse("Hi" , safe=False, json_dumps_params={'ensure_ascii': False})
-
-
-def generatePredictionForUserByClass(df_user):
-    response = []
-    q_find_non_grade = "SELECT * FROM df_user where grade = 'Zero'"
-    user_id = "'" + str(df_user['student_id'].unique()[0]) + "'"
-    user_curri = df_user['curriculum'].unique()[0]
-    df_user_non_grade = sqldf(q_find_non_grade)
-    non_grade_sub = list(df_user_non_grade['subject_id'].unique())
-    q_subject_data = list(Subject_Data.objects.all().values())
-    df_subject = pd.DataFrame(q_subject_data)
-    qdata = list(Student.objects.filter(curriculum=user_curri).values())
-    # ######################Function#####################################
-    thisdict = genSubjectDict(df_subject)
-    # ######################Function#####################################
-    df = pd.DataFrame(qdata)
-    df = pd.concat([df, df_user], ignore_index=True)
-    df = transfromGrade(df)
-    dfs = []
-    copy_origin_df = df
-    non_Zero_df = copy_origin_df[copy_origin_df.grade != 'Zero']
-    dfs.append(df)
-    dfs.append(non_Zero_df)
-    dfs[1]['subject_class'] = dfs[1].apply (lambda row: findSubjectClass(row['subject_id'], thisdict), axis=1)
-    tempAVG = dfs[1]
-    q_find_AVG = "SELECT student_id, AVG(grade) as grade, semester, year, curriculum, subject_class FROM tempAVG GROUP BY subject_class, student_id ORDER BY student_id"
-    tempDFS_AVG = sqldf(q_find_AVG)
-    dfs[1] = tempDFS_AVG
-    min_rating = 0
-    max_rating = 4
-    reader = Reader(rating_scale=(min_rating, max_rating))
-    param_grid = {
-      'n_factors': [20, 50, 100],
-      'n_epochs': [5, 10, 20]
-    }
-    data = Dataset.load_from_df(dfs[1][['student_id', 'subject_class', 'grade']], reader)
-    svd = SVD(n_epochs=10)
-    results = cross_validate(svd, data, measures=['RMSE', 'MAE'], cv=10, verbose=True)
-    gs = GridSearchCV(SVD, param_grid, measures=['rmse', 'mae'], cv=10)
-    gs.fit(data)
-    best_factor = gs.best_params['rmse']['n_factors']
-    best_epoch = gs.best_params['rmse']['n_epochs']
-    trainset, testset = train_test_split(data, test_size=.20)
-    svd = SVD(n_factors=best_factor, n_epochs=best_epoch)
-    svd.fit(trainset)
-    print(gs.best_score['rmse'])
-    dfs.append(svd)
-    student_id_lis = list(dfs[1]['student_id'].unique())
-    NumOfSub = len(list(thisdict.keys()))
-    final_df = generateFullCSVByClass(dfs[2], student_id_lis, 'sub', dfs[1], user_curri, NumOfSub)
-    q_sort = "SELECT * FROM final_df ORDER BY student_id"
-    final_df = sqldf(q_sort)
-    dfs.append(final_df)
-    return_dfs = dfs[3]
-    predict_string = "'" + "prediction" + "'"
-    q_find_predict_grade_user = f'SELECT student_id, grade, subject_class from return_dfs where student_id = {user_id} and semester = {predict_string}'
-    return_dfs = sqldf(q_find_predict_grade_user)
-    for index_user, row_user in return_dfs.iterrows():
-      user_subject_class = row_user['subject_class']
-      if user_subject_class == "อื่นๆ":
-        dic = {
-          "subject_class":user_subject_class,
-          "grade":row_user['grade']
+@csrf_exempt
+def generateModel(request, curri):
+    if request.method == 'POST':
+      body_unicode = request.body
+      body = json.loads(body_unicode)
+      model_name = body['name']
+      model_pred = body['pred']
+      print(model_pred)
+      qdata = list(Student.objects.all().values())
+      q_subject_data = list(Subject_Data.objects.all().values())
+      df_subject = pd.DataFrame(q_subject_data)
+      thisdict = genSubjectDict(df_subject)
+      df = pd.DataFrame(qdata)
+      dfs = queryBycurriculum(df)
+      dfs = transfromAlldfs(dfs)
+      for i in dfs:
+        temp = dfs[i][0]
+        temp = temp[temp.grade != 'Zero']
+        dfs[i].append(temp)
+      # q_subjectClassAndsubId = 'SELECT subject_id, subject_class from df_subject;'
+      # df_subject = sqldf(q_subjectClassAndsubId)
+      if model_pred == 'Class':
+        for j in dfs:
+          dfs[j][0]['subject_class'] = dfs[j][0].apply (lambda row: findSubjectClass(row['subject_id'], thisdict), axis=1)
+          dfs[j][1]['subject_class'] = dfs[j][1].apply (lambda row: findSubjectClass(row['subject_id'], thisdict), axis=1)
+          # casttemp = dfs[j][1]
+          # casttemp[["grade"]] = casttemp[["grade"]].apply(pd.to_numeric)
+          # dfs[j][1] = casttemp
+        for k in dfs:
+          tempAVG = dfs[k][1]
+          q_find_AVG = "SELECT student_id, AVG(grade) as grade, semester, year, curriculum, subject_class FROM tempAVG GROUP BY subject_class, student_id ORDER BY student_id"
+          tempDFS_AVG = sqldf(q_find_AVG)
+          dfs[k][1] = tempDFS_AVG
+      min_rating = 0
+      max_rating = 4
+      reader = Reader(rating_scale=(min_rating, max_rating))
+      param_grid = {
+        'n_factors': [20, 50, 100],
+        'n_epochs': [5, 10, 20]
         }
+      for i in dfs:
+        if model_pred == 'Class':
+          data = Dataset.load_from_df(dfs[i][1][['student_id', 'subject_class', 'grade']], reader)
+        else:
+          data = Dataset.load_from_df(dfs[i][1][['student_id', 'subject_id', 'grade']], reader)
+        svd = SVD(n_epochs=10)
+        results = cross_validate(svd, data, measures=['RMSE', 'MAE'], cv=10, verbose=True)
+        gs = GridSearchCV(SVD, param_grid, measures=['rmse', 'mae'], cv=10)
+        gs.fit(data)
+        best_factor = gs.best_params['rmse']['n_factors']
+        best_epoch = gs.best_params['rmse']['n_epochs']
+        trainset, testset = train_test_split(data, test_size=.20)
+        svd = SVD(n_factors=best_factor, n_epochs=best_epoch)
+        svd.fit(trainset)
+        print(gs.best_score['rmse'])
+        dfs[i].append(svd)
+        dfs[i].append(gs.best_score['rmse'])
+      if curri == 'Com':
+        curri = 'วิศวกรรมคอมพิวเตอร์'
+        model_curri = str(curri)
+        model_rmse = str(dfs[curri][3])
+        model_type = str(body['pred'])
+        model_file = dfs[curri][2]
+        sur = SurpriseModel(args={'name': model_name, 'curriculum' : model_curri, 'type': model_type,'rmse': model_rmse, 'model': model_file})
+        sur.save()
+        # with open(f'recommend/ML_model/{model_type}_{model_name}_{model_curri}.pkl', 'wb') as fp:
+        #   joblib.dump(dfs[curri][2],fp)
       else:
-        dic = {
-          "subject_class":user_subject_class,
-          "subject_in_class": thisdict[user_subject_class],
-          "grade":row_user['grade']
-        }
-      response.append(dic)
-    # q_subject_data = list(Subject_Data.objects.all().values())
-
-    # ######################Funtion#####################################
-    # thisdict = genSubjectDict(df_subject)
-    # ######################Funtion#####################################
-
-    # df = pd.DataFrame(qdata)
-    # df = pd.concat([df, df_user], ignore_index=True)
-
-    # ######################Funtion#####################################
-    # dfs = queryBycurriculum(df)
-    # ######################Funtion#####################################
-
-    # ######################Funtion#####################################
-    # dfs = transfromAlldfs(dfs)
-    # ######################Funtion#####################################
-
-    # for i in dfs:
-    #   temp = dfs[i][0]
-    #   temp = temp[temp.grade != 'Zero']
-    #   dfs[i].append(temp)
-
-    # for j in dfs:
-
-    #   ######################Funtion#####################################
-    #   dfs[j][0]['subject_class'] = dfs[j][0].apply (lambda row: findSubjectClass(row['subject_id'], thisdict), axis=1)
-    #   ######################Funtion#####################################
-
-    #   ######################Funtion#####################################
-    #   dfs[j][1]['subject_class'] = dfs[j][0].apply (lambda row: findSubjectClass(row['subject_id'], thisdict), axis=1)
-    #   ######################Funtion#####################################
-
-    # for k in dfs:
-    #   tempAVG = dfs[k][1]
-    #   q_find_AVG = "SELECT student_id, AVG(grade) as grade, semester, year, curriculum, subject_class FROM tempAVG GROUP BY subject_class, student_id ORDER BY student_id"
-    #   tempDFS_AVG = sqldf(q_find_AVG)
-    #   dfs[k][1] = tempDFS_AVG
-    # min_rating = 0
-    # max_rating = 4
-    # reader = Reader(rating_scale=(min_rating, max_rating))
-    # param_grid = {
-    #   'n_factors': [20, 50, 100],
-    #   'n_epochs': [5, 10, 20]
-    #   }
-    # for i in dfs:
-    #   data = Dataset.load_from_df(dfs[i][1][['student_id', 'subject_class', 'grade']], reader)
-    #   svd = SVD(n_epochs=10)
-    #   results = cross_validate(svd, data, measures=['RMSE', 'MAE'], cv=10, verbose=True)
-    #   gs = GridSearchCV(SVD, param_grid, measures=['rmse', 'mae'], cv=10)
-    #   gs.fit(data)
-    #   best_factor = gs.best_params['rmse']['n_factors']
-    #   best_epoch = gs.best_params['rmse']['n_epochs']
-    #   trainset, testset = train_test_split(data, test_size=.20)
-    #   svd = SVD(n_factors=best_factor, n_epochs=best_epoch)
-    #   svd.fit(trainset)
-    #   print(gs.best_score['rmse'])
-    #   dfs[i].append(svd)
-
-    # ######################Funtion#####################################
-    # student_id_lis = addFullCSVtoDFS(dfs)
-    # ######################Funtion#####################################
-
-    # ######################Funtion#####################################
-    # dfs = passDFStoFunc(dfs, student_id_lis, thisdict, 1)
-    # ######################Funtion#####################################
-
-    # return_dfs = dfs[user_curri][3]
-    # predict_string = "'" + "prediction" + "'"
-    # q_find_predict_grade_user = f'SELECT student_id, grade, subject_class from return_dfs where student_id = {user_id} and semester = {predict_string}'
-    # return_dfs = sqldf(q_find_predict_grade_user)
-    # for index_user, row_user in return_dfs.iterrows():
-    #   user_subject_class = row_user['subject_class']
-    #   if user_subject_class == "อื่นๆ":
-    #     dic = {
-    #       "subject_class":user_subject_class,
-    #       "grade":row_user['grade']
-    #     }
-    #   else:
-    #     dic = {
-    #       "subject_class":user_subject_class,
-    #       "subject_in_class": thisdict[user_subject_class],
-    #       "grade":row_user['grade']
-    #     }
-    #   response.append(dic)
-    return response
+        curri = 'วิศวกรรมคอมพิวเตอร์ (ต่อเนื่อง)'
+        model_curri = str(curri)
+        model_rmse = str(dfs[curri][3])
+        model_type = str(body['pred'])
+        model_file = cPickle.dumps(dfs[curri][2])
+        # sur = SurpriseModel(args={'name': model_name, 'curriculum' : model_curri, 'type': model_type,'rmse': model_rmse, 'model': model_file})
+        # sur.save()
+        with open(f'recommend/ML_model/{model_type}_{model_name}_{model_curri}.pkl', 'wb') as fp:
+          joblib.dump(dfs[curri][2],fp)
+      return JsonResponse("Hi" , safe=False, json_dumps_params={'ensure_ascii': False})
+    else:
+      return JsonResponse("BAD REQUEST" , safe=False, json_dumps_params={'ensure_ascii': False})
 
 
-def generatePredictionForUserByGrade(df_user):
-    response = []
-    user_id = "'" + str(df_user['student_id'].unique()[0]) + "'"
-    user_curri = df_user['curriculum'].unique()[0]
-    qdata = list(Student.objects.filter(curriculum=user_curri).values())
-    q_subject_data = list(Subject_Data.objects.all().values())
-    df_subject = pd.DataFrame(q_subject_data)
-    thisdict = genSubjectDict(df_subject)
-    df = pd.DataFrame(qdata)
-    df = pd.concat([df, df_user], ignore_index=True)
-    df = transfromGrade(df)
-    dfs = []
-    copy_origin_df = df
-    non_Zero_df = copy_origin_df[copy_origin_df.grade != 'Zero']
-    dfs.append(df)
-    dfs.append(non_Zero_df)
-    min_rating = 0
-    max_rating = 4
-    reader = Reader(rating_scale=(min_rating, max_rating))
-    param_grid = {
-      'n_factors': [20, 50, 100],
-      'n_epochs': [5, 10, 20]
-      }
-    data = Dataset.load_from_df(dfs[1][['student_id', 'subject_id', 'grade']], reader)
-    # svd = SVD(n_epochs=10)
-    # results = cross_validate(svd, data, measures=['RMSE', 'MAE'], cv=10, verbose=True)
-    gs = GridSearchCV(SVD, param_grid, measures=['rmse', 'mae'], cv=10)
-    gs.fit(data)
-    best_factor = gs.best_params['rmse']['n_factors']
-    best_epoch = gs.best_params['rmse']['n_epochs']
-    #print(best_epoch, best_factor)
-    trainset, testset = train_test_split(data, test_size=.20)
-    svd = SVD(n_factors=20, n_epochs=50)
-    svd.fit(trainset)
-    print(gs.best_score['rmse'])
-    dfs.append(svd)
-    user_student_id = df_user['student_id'].unique()[0]
-    
-    NumOfSub = len(list(thisdict.keys()))
-    final_df = generateFullCSVByGrade(dfs[2], user_student_id, 'sub', dfs[1], user_curri, NumOfSub)
-    q_sort = "SELECT * FROM final_df ORDER BY student_id"
-    final_df = sqldf(q_sort)
-    dfs.append(final_df)
-    return_dfs = dfs[3]
-    predict_string = "'" + "prediction" + "'"
-    q_find_predict_grade_user = f'SELECT student_id, grade, subject_id from return_dfs where student_id = {user_id} and semester = {predict_string}'
-    return_dfs = sqldf(q_find_predict_grade_user)
-    for index_user, row_user in return_dfs.iterrows():
-      user_subject_id = row_user['subject_id']
-      if user_subject_id in list(df_subject['subject_id']):
-        sub_name = Subject_Data.objects.get(subject_id = user_subject_id)
-        sub_name = SubjectSerializer(sub_name)
-        sub_name = sub_name.data['subject_name_eng']
-        dic = {
-              "subject_id":user_subject_id,
-              "subject_name":sub_name,
-              "grade":row_user['grade']
-            }
-        response.append(dic)
-    return response
-        
-
+@csrf_exempt
+def reqPredictPerUser(df_user, model_id):
+  all_models = list(SurpriseModel.objects.all().values())
+  model = "NOTFOUND"
+  model_type = "NOTFOUND"
+  for i in all_models:
+    if str(i['id']) == model_id:
+      model = i['args']['model']
+      model_type = i['args']['type']
+  print(model)
+  response = []
+  q_subject_data = list(Subject_Data.objects.all().values())
+  df_subject = pd.DataFrame(q_subject_data)
+  thisdict = genSubjectDict(df_subject)
+  df_user = transfromGrade(df_user)
+  df_user = df_user[df_user.grade != 'Zero']
+  qdata = list(Student.objects.filter(curriculum='วิศวกรรมคอมพิวเตอร์').values())
+  df = pd.DataFrame(qdata)
+  df = transfromGrade(df)
+  dfs = []
+  copy_origin_df = df
+  non_Zero_df = copy_origin_df[copy_origin_df.grade != 'Zero']
+  dfs.append(df)
+  dfs.append(non_Zero_df)
+  if model_type == 'Class':
+    tempAVG = dfs[1]
+    tempAVG_user = df_user 
+    df_user['subject_class'] = df.apply (lambda row: findSubjectClass(row['subject_id'], thisdict), axis=1)
+    dfs[1]['subject_class'] = dfs[1].apply (lambda row: findSubjectClass(row['subject_id'], thisdict), axis=1)
+    q_find_AVG = "SELECT student_id, AVG(grade) as grade, semester, year, curriculum, subject_class FROM tempAVG GROUP BY subject_class, student_id ORDER BY student_id"
+    q_find_AVG_user = "SELECT student_id, AVG(grade) as grade, semester, year, curriculum, subject_class FROM tempAVG_user GROUP BY subject_class, student_id ORDER BY student_id"
+    tempDFS_AVG = sqldf(q_find_AVG)
+    tempDF_AVG_USER = sqldf(q_find_AVG_user)
+    dfs[1] = tempDFS_AVG
+    df_user = tempDF_AVG_USER 
+    # model_file = joblib.load('recommend/ML_model/Class_test_New_01_วิศวกรรมคอมพิวเตอร์.pkl')
+    subject_id_in_dataset = dfs[1]['subject_class'].unique()
+    subject_id = df_user['subject_class']
+  else:
+    # model_file = joblib.load('recommend/ML_model/Grade_test_New_01_วิศวกรรมคอมพิวเตอร์.pkl')
+    subject_id_in_dataset = dfs[1]['subject_id'].unique()
+    subject_id = df_user['subject_id']
+  subject_ids_to_pred = np.setdiff1d(subject_id_in_dataset, subject_id)
+  test_set = [['Optional', sub, 4] for sub in subject_ids_to_pred]
+  # model_file = all_models[-1]['args']['model']
+  # model_file = cPickle.loads(model_file)
+  predictions = model.test(test_set)
+  pred_ratings = np.array([pred.est for pred in predictions])
+  NumOfSub = len(subject_id_in_dataset)
+  index_max = (-pred_ratings).argsort()[:NumOfSub]
+  for j in index_max:
+    sub = subject_ids_to_pred[j]
+    if model_type == 'Grade':
+      dic = {"subject_id" : sub, "grade" : round(pred_ratings[j], 2)}
+    else:
+      dic = {"subject_class" : sub, "grade" : round(pred_ratings[j], 2)}
+    response.append(dic)
+  return response
