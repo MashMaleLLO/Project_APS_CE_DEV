@@ -28,6 +28,7 @@ urlpatterns = [
     
     url(r'^students$',recc.studentApi),
     url(r'^students/(?P<id>\w+)$',recc.studentApi),
+    url(r'^students/(?P<id>\w+)/(?P<sid>\w+)$',recc.studentApi),
 
     url(r'^myModels$',recc.surpriseModel),
 

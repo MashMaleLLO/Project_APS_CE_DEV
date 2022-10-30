@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import axios from "axios";
-import PersonList from "./temp";
+import ModelList from "./modelList";
 
 const ReqAna = () => {
   let formData = new FormData();
@@ -47,7 +47,7 @@ const ReqAna = () => {
     <div className="flex flex-col gap-6 justify-center items-center h-screen">
       <h1>Upload your grade CSV (Save file as CSV-UTF-8)</h1>
       <form onSubmit={handleSubmit}>
-        <PersonList></PersonList>
+        <ModelList></ModelList>
         {/* <select name='pred'>
           <option value="Grade">Predict By Grade</option>
           <option value="Class">Predict By Class</option>

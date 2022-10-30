@@ -1,9 +1,13 @@
+from asyncio import constants
+from cgi import test
 from pyexpat import model
+from unittest.util import safe_repr
 from urllib import response
 from django.views.decorators.csrf import csrf_exempt
 from django.http.response import JsonResponse
 from .models import Student, Subject_Data, SurpriseModel
 from .serializers import StudentSerializer, SubjectSerializer
+from rest_framework.parsers import JSONParser
 # Create your views here.
 
 
@@ -18,7 +22,7 @@ import joblib
 
 from surprise import Dataset
 from surprise import Reader
-from surprise import SVD
+from surprise import SVD, accuracy
 from surprise.model_selection import cross_validate
 from surprise.model_selection import train_test_split
 from surprise.model_selection import GridSearchCV
@@ -48,7 +52,7 @@ def surpriseModel(request,id=0):
     return JsonResponse("BAD REQUEST", safe=False)
 
 @csrf_exempt
-def studentApi(request,id=0):
+def studentApi(request,id=0,sid=0):
     if request.method=='GET':
         print(id)
         if id == 0:
@@ -56,9 +60,77 @@ def studentApi(request,id=0):
             students_serializer = StudentSerializer(students,many=True)
             return JsonResponse(students_serializer.data, safe=False, json_dumps_params={'ensure_ascii': False})
         else:
-            student = Student.objects.get(student_id=id)
-            student_serializer = StudentSerializer(student)
-            return JsonResponse(student_serializer.data, safe=False, json_dumps_params={'ensure_ascii': False})
+            student = Student.objects.filter(student_id=id)
+            student_lis = list(student.values())
+            return JsonResponse(student_lis, safe=False, json_dumps_params={'ensure_ascii': False})
+    elif request.method=='POST':
+      student_data=JSONParser().parse(request)
+      print(request)
+      student_serializer=StudentSerializer(data=student_data)
+      if student_serializer.is_valid():
+        student_serializer.save()
+        return JsonResponse("Added Successfully",safe=False)
+      return JsonResponse("Failed to Add",safe=False)
+    elif request.method=='PUT':
+      if id == 0:
+        return JsonResponse("Pls Enter Student Id", safe=False)
+      else:
+        new_data = JSONParser().parse(request)
+        new_data_keys = list(new_data.keys())
+        if sid == 0:
+          student = Student.objects.filter(student_id=id)
+          this_student_lis = list(student.values())
+          un_constrain_keys = ['subject_id', 'grade', 'semester', 'year']
+          intersect_len = len(list(set(un_constrain_keys) & set(new_data_keys)))
+          if intersect_len > 0 or this_student_lis == []:
+            return JsonResponse("Key Error pls enter more key or cant find this student", safe=False)
+          else:
+            for i in this_student_lis:
+              if 'student_id' not in new_data_keys and 'curriculum' in new_data_keys:
+                student_id = i['student_id']
+                curri = new_data['curriculum']
+              elif 'student_id' in new_data_keys and 'curriculum' not in new_data_keys:
+                student_id = new_data['student_id']
+                curri = i['curriculum']
+              elif 'student_id' in new_data_keys and 'curriculum' in new_data_keys:
+                student_id = new_data['student_id']
+                curri = new_data['curriculum']
+              update_data = {
+                "student_id":student_id,
+                "subject_id":i['subject_id'],
+                "grade":i['grade'],
+                "semester":i['semester'],
+                "year":i['year'],
+                "curriculum":curri
+              }
+              student_serializer = StudentSerializer(Student.objects.get(id=i['id']), data=update_data)
+              if student_serializer.is_valid():
+                student_serializer.save()
+              else:
+                return JsonResponse("Failed To Update", safe=False)
+            return JsonResponse("Update Complete", safe=False)  
+        else:
+          student = Student.objects.get(student_id=id, subject_id=sid)
+          find_student = StudentSerializer(student)
+          student_keys = list(find_student.data.keys())
+          for i in student_keys:
+            if i not in new_data_keys:
+              temp = {i:find_student.data[i]}
+              new_data.update(temp)
+          student_serializer = StudentSerializer(student, data=new_data)
+          if student_serializer.is_valid():
+            student_serializer.save()
+            return JsonResponse("Update Complete", safe=False)
+          else:
+            return JsonResponse("Failed to update",safe=False)
+    elif request.method=='DELETE':
+      student =  Student.objects.get(student_id=id)
+      if student != None:
+        student.delete()
+        return JsonResponse("Delete Complete", safe=False)
+      else:
+        return JsonResponse("Cant Find Student", safe=False)
+
 
 @csrf_exempt
 def subjectApi(requset,id=0):
@@ -72,6 +144,13 @@ def subjectApi(requset,id=0):
       subject = Subject_Data.objects.get(subject_id = id)
       subject_serializer = SubjectSerializer(subject)
       return JsonResponse(subject_serializer.data, safe=False, json_dumps_params={'ensure_ascii': False})
+  elif request.method == 'POST':
+      subject_data=JSONParser().parse(request)
+      subject_serializer=SubjectSerializer(data=subject_data)
+      if subject_serializer.is_valid():
+        subject_serializer.save()
+        return JsonResponse("Added Successfully",safe=False)
+      return JsonResponse("Failed to Add",safe=False)
 
 
 
@@ -125,14 +204,25 @@ def addSubject(df, thisdict):
             "year":subject['year'],
             "subject_class": subject_class
         }
-        subject_serializer = SubjectSerializer(data=dic)
-        if subject_serializer.is_valid():
-            subject_serializer.save()
-            print(f'save {subject_serializer.data}')
+        this_subject = Subject_Data.objects.get(subject_id = subject['subject_id'], subject_name_thai = subject['subject_name_thai'], subject_name_eng = subject['subject_name_eng'])
+        if this_subject == None:
+          subject_serializer = SubjectSerializer(data=dic)
+          if subject_serializer.is_valid():
+              subject_serializer.save()
+              print(f'save {subject_serializer.data}')
+          else:
+              res = "Failed to add"
+              print(res)
+              return res
         else:
-            res = "Failed to add"
-            print(res)
-            return res
+          subject_serializer = SubjectSerializer(this_subject,data=dic)
+          if subject_serializer.is_valid():
+              subject_serializer.save()
+              print(f'Update {subject_serializer.data}')
+          else:
+              res = "Failed to add"
+              print(res)
+              return res
     res = 'Complete add' 
     return res
 
@@ -316,17 +406,22 @@ def generateModel(request, curri):
         else:
           data = Dataset.load_from_df(dfs[i][1][['student_id', 'subject_id', 'grade']], reader)
         svd = SVD(n_epochs=10)
-        results = cross_validate(svd, data, measures=['RMSE', 'MAE'], cv=10, verbose=True)
+        # results = cross_validate(svd, data, measures=['RMSE', 'MAE'], cv=10, verbose=True)
         gs = GridSearchCV(SVD, param_grid, measures=['rmse', 'mae'], cv=10)
         gs.fit(data)
         best_factor = gs.best_params['rmse']['n_factors']
         best_epoch = gs.best_params['rmse']['n_epochs']
-        trainset, testset = train_test_split(data, test_size=.20)
-        svd = SVD(n_factors=best_factor, n_epochs=best_epoch)
+        # trainset, testset = train_test_split(data, test_size=.20)
+        # svd = SVD(n_factors=best_factor, n_epochs=best_epoch)
+        # svd.fit(trainset)
+        trainset, testset = train_test_split(data, test_size=.10)
+        svd = gs.best_estimator["rmse"]
         svd.fit(trainset)
-        print(gs.best_score['rmse'])
+        # print(gs.best_score['rmse'])
         dfs[i].append(svd)
-        dfs[i].append(gs.best_score['rmse'])
+        pred_model = svd.test(testset)
+        this_rmse = accuracy.rmse(pred_model, verbose=True)
+        dfs[i].append(this_rmse)
       if curri == 'Com':
         curri = 'วิศวกรรมคอมพิวเตอร์'
         model_curri = str(curri)
@@ -343,10 +438,10 @@ def generateModel(request, curri):
         model_rmse = str(dfs[curri][3])
         model_type = str(body['pred'])
         model_file = cPickle.dumps(dfs[curri][2])
-        # sur = SurpriseModel(args={'name': model_name, 'curriculum' : model_curri, 'type': model_type,'rmse': model_rmse, 'model': model_file})
-        # sur.save()
-        with open(f'recommend/ML_model/{model_type}_{model_name}_{model_curri}.pkl', 'wb') as fp:
-          joblib.dump(dfs[curri][2],fp)
+        sur = SurpriseModel(args={'name': model_name, 'curriculum' : model_curri, 'type': model_type,'rmse': model_rmse, 'model': model_file})
+        sur.save()
+        # with open(f'recommend/ML_model/{model_type}_{model_name}_{model_curri}.pkl', 'wb') as fp:
+        #   joblib.dump(dfs[curri][2],fp)
       return JsonResponse("Hi" , safe=False, json_dumps_params={'ensure_ascii': False})
     else:
       return JsonResponse("BAD REQUEST" , safe=False, json_dumps_params={'ensure_ascii': False})
@@ -365,6 +460,11 @@ def reqPredictPerUser(df_user, model_id):
   response = []
   q_subject_data = list(Subject_Data.objects.all().values())
   df_subject = pd.DataFrame(q_subject_data)
+  subId_name = {}
+  for index_sub, row_sub in df_subject.iterrows():
+    dic_sub = {row_sub['subject_id']:row_sub['subject_name_eng']}
+    subId_name.update(dic_sub)
+  print(subId_name)
   thisdict = genSubjectDict(df_subject)
   df_user = transfromGrade(df_user)
   df_user = df_user[df_user.grade != 'Zero']
@@ -405,8 +505,12 @@ def reqPredictPerUser(df_user, model_id):
   for j in index_max:
     sub = subject_ids_to_pred[j]
     if model_type == 'Grade':
-      dic = {"subject_id" : sub, "grade" : round(pred_ratings[j], 2)}
+      lisForFindSubId = list(subId_name.keys())
+      if sub in lisForFindSubId:
+        dic = {"subject_id" : sub, "sub_name" : subId_name[sub], "grade" : round(pred_ratings[j], 2)}
+      else:
+        dic = {"subject_id" : sub, "sub_name" : "ไม่พบวิชาในฐานข้อมูล", "grade" : round(pred_ratings[j], 2)}
     else:
-      dic = {"subject_class" : sub, "grade" : round(pred_ratings[j], 2)}
+      dic = {"subject_class" : sub, "subject_in_class": thisdict[sub],"grade" : round(pred_ratings[j], 2)}
     response.append(dic)
   return response
