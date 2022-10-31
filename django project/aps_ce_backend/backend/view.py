@@ -30,7 +30,7 @@ def Throw(request):
 @csrf_exempt
 def csvHandler(request):
     csv_file = request.FILES['path_to_csv']
-    df = pd.read_csv(csv_file, dtype={0:'string',1:'string', 2:'string', 3:'string', 4:'string', 5:'string'}, encoding='utf-8')
+    df = pd.read_csv(csv_file, dtype={0:'string',1:'string', 2:'string', 3:'string', 4:'string', 5:'string' , 6:'string'}, encoding='utf-8')
     print(df)
     lis = []
     for index, row in df.iterrows():

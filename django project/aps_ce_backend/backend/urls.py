@@ -29,6 +29,11 @@ urlpatterns = [
     url(r'^students$',recc.studentApi),
     url(r'^students/(?P<id>\w+)$',recc.studentApi),
     url(r'^students/(?P<id>\w+)/(?P<sid>\w+)$',recc.studentApi),
+    url(r'^studentsUpdateStatus$',recc.studentUpdateStatus),
+    url(r'^studentUpdateCareer$',recc.studentUpdateCareer),
+    url(r'^studentUpdateCareer/(?P<id>\w+)$',recc.studentUpdateCareer),
+    url(r'^studentThatHaveJob$',recc.getStudentWithJob),
+
 
     url(r'^myModels$',recc.surpriseModel),
 

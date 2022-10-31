@@ -1,4 +1,5 @@
 from email.policy import default
+from statistics import mode
 from django.db import models
 from picklefield.fields import PickledObjectField
 
@@ -10,6 +11,8 @@ class Student(models.Model):
       semester = models.CharField(max_length=5)
       year = models.CharField(max_length=10)
       curriculum = models.CharField(max_length=100)
+      status = models.CharField(max_length=100, default='ungraduate')
+      career = models.CharField(max_length=100, default='Zero')
 
 class Subject_Data(models.Model):
       subject_id = models.CharField(max_length=300)
