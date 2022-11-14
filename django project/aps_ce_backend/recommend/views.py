@@ -496,12 +496,19 @@ def passDFStoFunc(dfs, student_id_lis, thisdict, byWhat):
 @csrf_exempt
 def generateModel(request, curri):
     if request.method == 'POST':
+      todays_date = date.today()
+      this_year = todays_date.year + 543 - 4
+      base_year = 2560
+      year_that_grad = []
+      query = Q(start_year = str(base_year))
+      for runnub in range(base_year+1, this_year+1):
+        query.add(Q(start_year = str(runnub)), Q.OR)
       body_unicode = request.body
       body = json.loads(body_unicode)
       model_name = body['name']
       model_pred = body['pred']
       print(model_pred)
-      qdata = list(Student.objects.all().values())
+      qdata = list(Student.objects.filter(query).values())
       q_subject_data = list(Subject_Data.objects.all().values())
       df_subject = pd.DataFrame(q_subject_data)
       thisdict = genSubjectDict(df_subject)
