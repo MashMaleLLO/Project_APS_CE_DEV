@@ -9,6 +9,7 @@ from .models import Student, Subject_Data, SurpriseModel
 from .serializers import StudentSerializer, SubjectSerializer
 from rest_framework.parsers import JSONParser
 from django.db.models import Q
+from datetime import date
 # Create your views here.
 
 
@@ -104,7 +105,8 @@ def studentApi(request,id=0,sid=0):
                 "year":i['year'],
                 "curriculum":curri,
                 "status":i['status'],
-                "career":i['career']
+                "career":i['career'],
+                "start_year":i['start_year']
               }
               student_serializer = StudentSerializer(Student.objects.get(id=i['id']), data=update_data)
               if student_serializer.is_valid():
@@ -149,7 +151,8 @@ def studentUpdateStatus(request):
         "year":i['year'],
         "curriculum":i['curriculum'],
         "status":"graduate",
-        "career":i['career']
+        "career":i['career'],
+        "start_year":i['start_year']
       }
       student_serializer = StudentSerializer(Student.objects.get(id=this_obj_id), data=update_data)
       if student_serializer.is_valid():
@@ -179,8 +182,9 @@ def studentUpdateCareer(request, id=0):
             "semester":i['semester'],
             "year":i['year'],
             "curriculum":i['curriculum'],
-            "status":"graduate",
-            "career":row['job']
+            "status": i["status"],
+            "career":row['job'],
+            "start_year":i['start_year']
           }
           student_serializer = StudentSerializer(Student.objects.get(id=i['id']), data=update_data)
           if student_serializer.is_valid():
@@ -204,7 +208,8 @@ def studentUpdateCareer(request, id=0):
           "year":i['year'],
           "curriculum":i['curriculum'],
           "status":"graduate",
-          "career":student_data['career']
+          "career":student_data['career'],
+          "start_year":i['start_year']
         }
         student_serializer = StudentSerializer(Student.objects.get(id=i['id']), data=update_data)
         if student_serializer.is_valid():
@@ -212,6 +217,40 @@ def studentUpdateCareer(request, id=0):
         else:
           return JsonResponse("Failed to update", safe=False)
       return JsonResponse("Update Complete", safe=False)
+
+
+@csrf_exempt
+def addStudentStartYear(request):
+  students = list(Student.objects.filter(start_year='Zero').values())
+  df = pd.DataFrame(students)
+  df['year'] = df['year'].astype('int')
+  q = "SELECT student_id, min(year) as start_year from df group by student_id"
+  df = sqldf(q)
+  for index, row in df.iterrows():
+    print(".")
+    this_student = Student.objects.filter(student_id=row['student_id'])
+    this_student = list(this_student.values())
+    if this_student == []:
+      pass
+    else:
+      for i in this_student:
+        update_data = {
+          "student_id":i['student_id'],
+          "subject_id":i['subject_id'],
+          "grade":i['grade'],
+          "semester":i['semester'],
+          "year":i['year'],
+          "curriculum":i['curriculum'],
+          "status":i["status"],
+          "career":i['career'],
+          "start_year":row['start_year']
+        }
+        student_serializer = StudentSerializer(Student.objects.get(id=i['id']), data=update_data)
+        if student_serializer.is_valid():
+          student_serializer.save()
+        else:
+          return JsonResponse("Failed to update", safe=False)
+  return JsonResponse(students, safe=False, json_dumps_params={'ensure_ascii': False})
 
 @csrf_exempt
 def getStudentWithJob(request):
@@ -263,7 +302,8 @@ def addStudent(df):
             "year":student['year'],
             "curriculum":student['curriculum'],
             "status":student['status'],
-            "career":"Zero"
+            "career":"Zero",
+            "start_year":student['start_year']
         }
         student_serializer = StudentSerializer(data=dic)
         if student_serializer.is_valid():

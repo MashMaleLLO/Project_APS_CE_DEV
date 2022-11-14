@@ -5,7 +5,7 @@ from .models import Student, Subject_Data
 class StudentSerializer(serializers.ModelSerializer):
     class Meta:
         model=Student
-        fields=('student_id', 'subject_id', 'grade', 'semester', 'year', 'curriculum', 'status', 'career')
+        fields=('student_id', 'subject_id', 'grade', 'semester', 'year', 'curriculum', 'status', 'career', 'start_year')
 
 class SubjectSerializer(serializers.ModelSerializer):
     class Meta:

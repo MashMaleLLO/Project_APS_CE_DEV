@@ -7,6 +7,7 @@ from recommend.models import Student, Subject_Data
 from recommend.serializers import StudentSerializer, SubjectSerializer
 import pandas as pd
 import csv
+import codecs
 from django.views.decorators.csrf import csrf_exempt
 
 import os
@@ -110,6 +111,7 @@ def csv2560Download(request, curri):
     subjects = list(Subject_Data.objects.all().values())
     if curri == 'computer':
         response = HttpResponse(content_type='text/csv')
+        response.write(codecs.BOM_UTF8)
         writer = csv.writer(response)
         writer.writerow(['student_id','subject_id','grade', 'semester', 'year', 'curriculum'])
         for i in subjects:
@@ -120,7 +122,7 @@ def csv2560Download(request, curri):
         writer = csv.writer(response)
         writer.writerow(['student_id','subject_id','grade', 'semester', 'year', 'curriculum'])
         for i in subjects:
-            writer.writerow(['Optional',i['subject_id'],'Your Grade', 'Optional', 'Optional', 'วิศวกรรมคอมพิวเตอร์'])
+            writer.writerow(['Optional',i['subject_id'],'Your Grade', 'Optional', 'Optional', 'วิศวกรรมคอมพิวเตอร์ (ต่อเนื่อง)'])
         response['Content-Disposition'] = 'attachment; filename="2560fileformat.csv"'
     return response
 
@@ -146,3 +148,6 @@ def gradeUploader(request, model):
     return JsonResponse("Hi", safe=False)
 
 
+# @csrf_exempt
+# def uc01_getGradResult(request, year):
+#     students = Student.objects.get()

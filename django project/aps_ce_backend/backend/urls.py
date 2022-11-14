@@ -33,6 +33,7 @@ urlpatterns = [
     url(r'^studentUpdateCareer$',recc.studentUpdateCareer),
     url(r'^studentUpdateCareer/(?P<id>\w+)$',recc.studentUpdateCareer),
     url(r'^studentThatHaveJob$',recc.getStudentWithJob),
+    url(r'^updateStudentStartYear', recc.addStudentStartYear),
 
 
     url(r'^myModels$',recc.surpriseModel),

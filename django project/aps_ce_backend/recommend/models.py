@@ -13,6 +13,7 @@ class Student(models.Model):
       curriculum = models.CharField(max_length=100)
       status = models.CharField(max_length=100, default='ungraduate')
       career = models.CharField(max_length=100, default='Zero')
+      start_year = models.CharField(max_length=100, default='Zero')
 
 class Subject_Data(models.Model):
       subject_id = models.CharField(max_length=300)
