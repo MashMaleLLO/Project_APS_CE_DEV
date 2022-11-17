@@ -9,6 +9,8 @@ import pandas as pd
 import csv
 import codecs
 from django.views.decorators.csrf import csrf_exempt
+from django.db.models import Q
+from pandasql import sqldf
 
 import os
 import gensim
@@ -107,22 +109,46 @@ def csvDownload(request):
     return response
 
 @csrf_exempt
-def csv2560Download(request, curri):
+def uc01_getGradResult(request, curri, year):
+    if curri == "com":
+        curri = "วิศวกรรมคอมพิวเตอร์"
+    else:
+        curri = "วิศวกรรมคอมพิวเตอร์ (ต่อเนื่อง)"
+    query = Q(curriculum = str(curri))
+    query.add(Q(start_year = str(year)), Q.AND)
+    students = list(Student.objects.filter(query).values())
+    df = pd.DataFrame(students)
+    query = "SELECT student_id, start_year, career, curriculum FROM df group by student_id"
+    df = sqldf(query)
+    students = df.values.tolist()
+    if students != []:
+        return JsonResponse(students , safe=False, json_dumps_params={'ensure_ascii': False})
+    else:
+        return JsonResponse("Can not Found any students" , safe=False, json_dumps_params={'ensure_ascii': False})
+
+@csrf_exempt
+def uc02_getPredResultByYear(request, curri, year):
+    return 1
+
+#####UC03############
+
+@csrf_exempt
+def csv2560Download(request, curri, year):
     subjects = list(Subject_Data.objects.all().values())
     if curri == 'computer':
         response = HttpResponse(content_type='text/csv')
         response.write(codecs.BOM_UTF8)
         writer = csv.writer(response)
-        writer.writerow(['student_id','subject_id','grade', 'semester', 'year', 'curriculum'])
+        writer.writerow(['student_id','subject_id','grade', 'semester', 'year', 'curriculum', 'status', 'career', 'start_year'])
         for i in subjects:
-            writer.writerow(['Optional',i['subject_id'],'Your Grade', 'Optional', 'Optional', 'วิศวกรรมคอมพิวเตอร์'])
+            writer.writerow(['Optional',i['subject_id'],'Your Grade', 'Optional', 'Optional', 'วิศวกรรมคอมพิวเตอร์', 'ungraduate', 'Zero', year])
         response['Content-Disposition'] = 'attachment; filename="2560fileformat.csv"'
     else:
         response = HttpResponse(content_type='text/csv')
         writer = csv.writer(response)
         writer.writerow(['student_id','subject_id','grade', 'semester', 'year', 'curriculum'])
         for i in subjects:
-            writer.writerow(['Optional',i['subject_id'],'Your Grade', 'Optional', 'Optional', 'วิศวกรรมคอมพิวเตอร์ (ต่อเนื่อง)'])
+            writer.writerow(['Optional',i['subject_id'],'Your Grade', 'Optional', 'Optional', 'วิศวกรรมคอมพิวเตอร์ (ต่อเนื่อง)', 'ungraduate', 'Zero', year])
         response['Content-Disposition'] = 'attachment; filename="2560fileformat.csv"'
     return response
 
@@ -147,7 +173,11 @@ def gradeUploader(request, model):
         print(i)
     return JsonResponse("Hi", safe=False)
 
+@csrf_exempt
+def getPossibleYear(request):
+    students = list(Student.objects.all().values())
+    df = pd.DataFrame(students)
+    year = list(df['start_year'].unique())
+    return JsonResponse(year , safe=False, json_dumps_params={'ensure_ascii': False})
 
-# @csrf_exempt
-# def uc01_getGradResult(request, year):
-#     students = Student.objects.get()
+#####UC03############

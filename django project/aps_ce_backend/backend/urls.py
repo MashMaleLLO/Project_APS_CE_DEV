@@ -44,6 +44,11 @@ urlpatterns = [
     url(r'^subjects$',recc.subjectApi),
     url(r'^subjects/(?P<id>\w+)$',recc.subjectApi),
 
-    url(r'^reqAna/(?P<curri>\w+)$', view.csv2560Download),
+    #UC03
+    url(r'^reqAna/(?P<curri>\w+)/(?P<year>\w+)$', view.csv2560Download),
     url(r'^reqPredict/(?P<model>\w+)$', view.gradeUploader),
+    url(r'^getPossibleYear', view.getPossibleYear),
+
+    #UC01
+    url(r'^getGradResult/(?P<curri>\w+)/(?P<year>\w+)$', view.uc01_getGradResult),
 ]

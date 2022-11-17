@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import axios from "axios";
 import ModelList from "./modelList";
+import YearList from "./listPossibleYear";
 
 const ReqAna = () => {
   let formData = new FormData();
@@ -28,7 +29,7 @@ const ReqAna = () => {
     e.preventDefault();
     async function getfile() {
       let res = await axios({
-        url: "http://localhost:8000/reqAna/" + e.target.curri.value, //your url
+        url: "http://localhost:8000/reqAna/" + e.target.curri.value + "/" + e.target.year.value, //your url
         method: "GET",
         responseType: "blob", // important
       }).then((response) => {
@@ -66,6 +67,7 @@ const ReqAna = () => {
           <option value="computer">วิศวกรรมคอมพิวเตอร์</option>
           <option value="computerNext">วิศวกรรมคอมพิวเตอร์ (ต่อเนื่อง)</option>
         </select>
+        <YearList></YearList>
         <button type="submit">Download CSV Format For subject 2560</button>
       </form>
     </div>
