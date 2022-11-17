@@ -152,7 +152,7 @@ def csv2560Download(request, curri, year):
         response['Content-Disposition'] = 'attachment; filename="2560fileformat.csv"'
     return response
 
-
+    #####UC05############
 @csrf_exempt
 def gradeUploader(request, model):
     csv_file = request.FILES['path_to_csv']
