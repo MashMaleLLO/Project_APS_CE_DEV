@@ -139,22 +139,24 @@ def csv2560Download(request, curri, year):
         response = HttpResponse(content_type='text/csv')
         response.write(codecs.BOM_UTF8)
         writer = csv.writer(response)
-        writer.writerow(['student_id','subject_id','grade', 'semester', 'year', 'curriculum', 'status', 'career', 'start_year'])
+        writer.writerow(['student_id','subject_id','grade', 'curriculum', 'Want_To_Predict'])
         for i in subjects:
-            writer.writerow(['Optional',i['subject_id'],'Your Grade', 'Optional', 'Optional', 'วิศวกรรมคอมพิวเตอร์', 'ungraduate', 'Zero', year])
+            print(i['subject_id'])
+            writer.writerow(['Optional',i['subject_id'],'Your Grade', 'วิศวกรรมคอมพิวเตอร์'])
         response['Content-Disposition'] = 'attachment; filename="2560fileformat.csv"'
     else:
         response = HttpResponse(content_type='text/csv')
         writer = csv.writer(response)
-        writer.writerow(['student_id','subject_id','grade', 'semester', 'year', 'curriculum'])
+        writer.writerow(['student_id','subject_id','grade', 'curriculum', 'Want_to_Predict'])
         for i in subjects:
-            writer.writerow(['Optional',i['subject_id'],'Your Grade', 'Optional', 'Optional', 'วิศวกรรมคอมพิวเตอร์ (ต่อเนื่อง)', 'ungraduate', 'Zero', year])
+            writer.writerow(['Optional',i['subject_id'],'Your Grade', 'วิศวกรรมคอมพิวเตอร์ (ต่อเนื่อง)'])
         response['Content-Disposition'] = 'attachment; filename="2560fileformat.csv"'
     return response
 
     #####UC05######
 @csrf_exempt
-def gradeUploader(request, model):
+def gradeUploader(request):
+    grade_list = ['A','B','C','D','F','S','a','b','c','d','f','s','B+','C+','D+','a','b+','c+','d+']
     csv_file = request.FILES['path_to_csv']
     df = pd.read_csv(csv_file, dtype={0:'string',1:'string', 3:'string', 4:'string', 5:'string'}, encoding='utf-8')
     lis = []
@@ -162,13 +164,17 @@ def gradeUploader(request, model):
         strt = '0'
         subId = row['subject_id']
         grade = row['grade']
-        if len(subId) < 8:
+        if len(subId) == 7:
             strt += row['subject_id']
             subId = strt
+        elif len(subId) < 7 or len(subId) > 8:
+            return JsonResponse(f'Error subject id not valid at index : {index}',safe=False)
         df.at[index, 'subject_id'] = subId
         if grade == 'Your Grade':
             df.at[index, 'grade'] = 'Zero'
-    response = recc.reqPredictPerUser(df, model)
+        elif grade not in grade_list:
+            return JsonResponse(f'Error grade not valid at index : {index}',safe=False)
+    response = recc.reqPredictPerUser_Production(df)
     for i in response:
         print(i)
     return JsonResponse("Hi", safe=False)

@@ -409,6 +409,8 @@ def transfromAlldfs(dfs):
     dfs[i][0] = transfromGrade(dfs[i][0])
   return dfs
 
+
+##### This Funtion Generate A thisdict item that consit of a {class: [subid,...,subid]} For a use in reqPredperUser ######
 def genSubjectDict(df):
   thisdict = {}
   for index, row in df.iterrows():
@@ -589,6 +591,11 @@ def generateModel(request, curri):
 
 @csrf_exempt
 def reqPredictPerUser(df_user, model_id):
+
+  ##### Get Curriculum From User #####
+  this_user_curri = df_user.loc[0,'curriculum']
+
+  ##### Find Model By It ID #####
   all_models = list(SurpriseModel.objects.all().values())
   model = "NOTFOUND"
   model_type = "NOTFOUND"
@@ -597,14 +604,23 @@ def reqPredictPerUser(df_user, model_id):
       model = i['args']['model']
       model_type = i['args']['type']
   print(model)
+  ###############################
+
+
   response = []
   q_subject_data = list(Subject_Data.objects.all().values())
   df_subject = pd.DataFrame(q_subject_data)
+
+  ##### Create A Suject Dict {ID:NAME} #####
+
   subId_name = {}
   for index_sub, row_sub in df_subject.iterrows():
     dic_sub = {row_sub['subject_id']:row_sub['subject_name_eng']}
     subId_name.update(dic_sub)
-  print(subId_name)
+  # print(subId_name)
+  
+  ##########################################
+
   thisdict = genSubjectDict(df_subject)
   df_user = transfromGrade(df_user)
   df_user = df_user[df_user.grade != 'Zero']
@@ -654,3 +670,32 @@ def reqPredictPerUser(df_user, model_id):
       dic = {"subject_class" : sub, "subject_in_class": thisdict[sub],"grade" : round(pred_ratings[j], 2)}
     response.append(dic)
   return response
+
+
+
+def reqPredictPerUser_Production(df_user):    
+    all_models = list(SurpriseModel.objects.all().values())
+    model = None
+    for i in all_models:
+        if str(i['id']) == '14':
+            model = i['args']['model']
+            model_type = i['args']['type']
+    if model is None:
+        print("Model not found")
+        return
+    df_user = transfromGrade(df_user)
+    selected_values = df_user.query("Want_To_Predict == '?'")['subject_id'].tolist()
+    df_user = df_user[df_user.grade != 'Zero']
+    subId_name = {row['subject_id']:row['subject_name_eng'] for row in Subject_Data.objects.values()}
+    subject_ids_to_pred = selected_values
+    test_set = [['Optional', sub, 4] for sub in subject_ids_to_pred]
+    predictions = model.test(test_set)
+    pred_ratings = [pred.est for pred in predictions]
+    pred_ratings = [(subject_ids_to_pred[i], pred_ratings[i]) for i in range(len(subject_ids_to_pred))]
+    pred_ratings.sort(key=lambda x: x[1], reverse=True)
+    response = []
+    for sub_id, grade in pred_ratings:
+        if sub_id in subId_name:
+            dic = {"subject_id" : sub_id, "sub_name" : subId_name[sub_id], "grade" : round(grade, 2)}
+            response.append(dic)
+    return response

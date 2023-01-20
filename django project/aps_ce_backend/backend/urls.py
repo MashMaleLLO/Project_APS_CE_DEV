@@ -46,7 +46,7 @@ urlpatterns = [
 
     #UC03
     url(r'^reqAna/(?P<curri>\w+)/(?P<year>\w+)$', view.csv2560Download),
-    url(r'^reqPredict/(?P<model>\w+)$', view.gradeUploader),
+    url(r'^reqPredict', view.gradeUploader),
     url(r'^getPossibleYear', view.getPossibleYear),
 
     #UC01

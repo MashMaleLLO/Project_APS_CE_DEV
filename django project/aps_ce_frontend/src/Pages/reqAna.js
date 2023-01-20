@@ -18,7 +18,7 @@ const ReqAna = () => {
     e.preventDefault();
     console.log(e.target.model.value)
     async function fetchData() {
-      let res = await axios.post("http://localhost:8000/reqPredict/" + e.target.model.value, formData);
+      let res = await axios.post("http://localhost:8000/reqPredict", formData);
       console.log(res.data);
     }
 
