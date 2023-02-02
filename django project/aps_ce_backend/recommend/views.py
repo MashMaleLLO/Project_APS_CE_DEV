@@ -372,36 +372,29 @@ def queryBycurriculum(df):
 
 
 def transfromGrade(df):
-  df.loc[df["grade"] == "A", "grade"] = 4
-  df.loc[df["grade"] == "S", "grade"] = 4
-  df.loc[df["grade"] == "T(A)", "grade"] = 4
-
-  df.loc[df["grade"] == "B+", "grade"] = 3.5
-  df.loc[df["grade"] == "T(B+)", "grade"] = 3.5
-
-  df.loc[df["grade"] == "B+", "grade"] = 3.5
-  df.loc[df["grade"] == "T(B+)", "grade"] = 3.5
-
-  df.loc[df["grade"] == "B", "grade"] = 3
-  df.loc[df["grade"] == "T(B)", "grade"] = 3
-
-  df.loc[df["grade"] == "C+", "grade"] = 2.5
-  df.loc[df["grade"] == "T(C+)", "grade"] = 2.5
-
-  df.loc[df["grade"] == "C", "grade"] = 2
-  df.loc[df["grade"] == "T(C)", "grade"] = 2
-
-  df.loc[df["grade"] == "D+", "grade"] = 1.5
-  df.loc[df["grade"] == "T(D+)", "grade"] = 1.5
-
-  df.loc[df["grade"] == "D", "grade"] = 1
-  df.loc[df["grade"] == "T(D)", "grade"] = 1
-
-  df.loc[df["grade"] == "F", "grade"] = 0
-  df.loc[df["grade"] == "T(F)", "grade"] = 0
-  df.loc[df["grade"] == "U", "grade"] = 0
-
+  grade_map = {
+      "A": 4,
+      "S": 4,
+      "T(A)": 4,
+      "B+": 3.5,
+      "T(B+)": 3.5,
+      "B": 3,
+      "T(B)": 3,
+      "C+": 2.5,
+      "T(C+)": 2.5,
+      "C": 2,
+      "T(C)": 2,
+      "D+": 1.5,
+      "T(D+)": 1.5,
+      "D": 1,
+      "T(D)": 1,
+      "F": 0,
+      "T(F)": 0,
+      "U": 0,
+  }
+  df["grade"] = df["grade"].replace(grade_map)
   return df
+
 
 
 def transfromAlldfs(dfs):
@@ -591,10 +584,8 @@ def generateModel(request, curri):
 
 @csrf_exempt
 def reqPredictPerUser(df_user, model_id):
-
   ##### Get Curriculum From User #####
   this_user_curri = df_user.loc[0,'curriculum']
-
   ##### Find Model By It ID #####
   all_models = list(SurpriseModel.objects.all().values())
   model = "NOTFOUND"
@@ -605,22 +596,16 @@ def reqPredictPerUser(df_user, model_id):
       model_type = i['args']['type']
   print(model)
   ###############################
-
-
   response = []
   q_subject_data = list(Subject_Data.objects.all().values())
   df_subject = pd.DataFrame(q_subject_data)
-
   ##### Create A Suject Dict {ID:NAME} #####
-
   subId_name = {}
   for index_sub, row_sub in df_subject.iterrows():
     dic_sub = {row_sub['subject_id']:row_sub['subject_name_eng']}
     subId_name.update(dic_sub)
   # print(subId_name)
-  
   ##########################################
-
   thisdict = genSubjectDict(df_subject)
   df_user = transfromGrade(df_user)
   df_user = df_user[df_user.grade != 'Zero']
