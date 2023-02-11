@@ -2,9 +2,8 @@ import * as React from "react";
 import AppBar from "@mui/material/AppBar";
 import Box from "@mui/material/Box";
 import Toolbar from "@mui/material/Toolbar";
-import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
-import { Routes, Route, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 export default function Navbar() {
   let navigate = useNavigate();
@@ -19,6 +18,14 @@ export default function Navbar() {
   const predictStudent = () => {
     let predictStudent = `predictStudent`;
     navigate(predictStudent);
+  };
+  const recommendSubject = () => {
+    let recommendSubject = `recommendSubject`;
+    navigate(recommendSubject);
+  };
+  const login = () => {
+    let login = `login`;
+    navigate(login);
   };
 
   return (
@@ -47,12 +54,22 @@ export default function Navbar() {
             sx={{ flexGrow: 1 }}
             onClick={predictStudent}
           >
-            พยากรนักศึกษา
+            พยากรณ์นักศึกษา
           </Button>
-          <Button variant="h1" component="div" sx={{ flexGrow: 1 }}>
+          <Button
+            variant="h1"
+            component="div"
+            sx={{ flexGrow: 1 }}
+            onClick={recommendSubject}
+          >
             แนะนำวิชาเลือก
           </Button>
-          <Button variant="h1" component="div" sx={{ flexGrow: 5 }}>
+          <Button
+            variant="h1"
+            component="div"
+            sx={{ flexGrow: 5 }}
+            onClick={login}
+          >
             เข้าสู่ระบบ
           </Button>
         </Toolbar>

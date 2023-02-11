@@ -10,6 +10,8 @@ import CareerUpdate from './Pages/updateStudentCareer';
 import OutputCareer from './Pages/outputCareer';
 import PredictStudent from './Pages/predictStudent';
 import HomePage from './Pages/index'
+import Login from './Pages/login'
+import RecommendSubject from './Pages/recommendSubject'
 
 import Navbar from './Component/navbar';
 import { theme } from './Component/theme';
@@ -24,7 +26,8 @@ function App() {
             <Route path="/" element={<center><HomePage/></center>} />
             <Route path="/outputCareer" element={<center><OutputCareer/></center>} />
             <Route path="/predictStudent" element={<center><PredictStudent/></center>} />
-
+            <Route path="/recommendSubject" element={<center><RecommendSubject/></center>} />
+            <Route path="/login" element={<center><Login/></center>} />
 
 
             <Route path="/subjectUpload" element={<center><SubjectUpload/></center>} />
