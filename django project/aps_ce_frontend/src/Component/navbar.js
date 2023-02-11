@@ -47,7 +47,7 @@ export default function Navbar() {
             sx={{ flexGrow: 1 }}
             onClick={predictStudent}
           >
-            พยากรนักศึกษา
+            พยากรณ์นักศึกษา
           </Button>
           <Button variant="h1" component="div" sx={{ flexGrow: 1 }}>
             แนะนำวิชาเลือก
