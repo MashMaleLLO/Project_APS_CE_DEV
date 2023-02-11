@@ -3,8 +3,8 @@ from urllib import response
 from django.http.response import JsonResponse
 from django.http import HttpResponse
 from recommend import views as recc
-from recommend.models import Student, Subject_Data
-from recommend.serializers import StudentSerializer, SubjectSerializer
+from recommend.models import Student, Subject_Data, CSV_File
+from recommend.serializers import StudentSerializer, SubjectSerializer, CSVSerializer
 import pandas as pd
 import csv
 import codecs
@@ -18,6 +18,11 @@ import spacy
 import en_core_web_sm
 import nltk
 import math
+import pickle as cPickle
+import json
+from pytz import timezone
+import pytz
+from datetime import datetime
 # nltk.download('stopwords')
 from nltk.corpus import stopwords
 # STOPWORDS = set(stopwords.words('english'))
@@ -45,6 +50,34 @@ def csvHandler(request):
         df.at[index, 'subject_id'] = subId
     res = recc.addStudent(df)
     return JsonResponse(res, safe=False)
+    
+
+
+@csrf_exempt
+def csv_upload(request, type_data):
+    if request.method == 'POST':
+        csv_file = request.FILES['file']
+        if not csv_file.name.endswith('.csv'):
+            return JsonResponse("File format not match pls upload only .csv file", safe=False)
+        df = pd.read_csv(csv_file)
+        df = df.astype(str) # cast all columns to str
+        pickled_data = cPickle.dumps(df)
+        csv_m = {
+            "name": csv_file.name,
+            "upload_date": datetime.now(pytz.timezone('Asia/Bangkok')),
+            "update_date": datetime.now(pytz.timezone('Asia/Bangkok')),
+            "del_flag": "0",
+            "type_data": type_data,
+            "file": pickled_data
+        }
+        csv_m = CSVSerializer(csv_m, data=csv_m)
+        if csv_m.is_valid():
+            csv_m.save()
+            return JsonResponse(f'Upload file {csv_file.name} complete.', safe=False)
+        else:
+            return JsonResponse('serializer is not valid',safe=False)
+    return JsonResponse('Method not match.', safe=False)
+
 
 @csrf_exempt
 def csvHandlerSubject(request):

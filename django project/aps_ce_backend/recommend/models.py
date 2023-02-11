@@ -2,7 +2,9 @@ from email.policy import default
 from statistics import mode
 from django.db import models
 from picklefield.fields import PickledObjectField
-
+from pytz import timezone
+import pytz
+from datetime import datetime
 # Create your models here.
 class Student(models.Model):
       student_id = models.CharField(max_length=300)
@@ -26,4 +28,16 @@ class Subject_Data(models.Model):
 
 class SurpriseModel(models.Model):
       args = PickledObjectField()
+
+class CSV_File(models.Model):
+      name = models.CharField(max_length=300)
+      upload_date = models.DateTimeField(default=datetime.now(pytz.timezone('Asia/Bangkok')))
+      update_date = models.DateTimeField(default=datetime.now(pytz.timezone('Asia/Bangkok')))
+      del_flag = models.CharField(max_length=10)
+      type_data = models.CharField(max_length=100)
+      file = PickledObjectField()
+
+      def save(self, *args, **kwargs):
+            self.update_date = datetime.now(pytz.timezone('Asia/Bangkok'))
+            return super().save(*args, **kwargs)
 
