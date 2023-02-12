@@ -18,14 +18,23 @@ const OutputCareer = () => {
   if (!posts) return null;
 
   const careerCount = _.countBy(posts, "career");
-  const filteredPosts = posts.filter(post => post.start_year === startYear || startYear === "");
+  const filteredPosts = posts.filter(
+    (post) => post.start_year === startYear || startYear === ""
+  );
 
-  const filteredCareers = Object.entries(careerCount).filter(([career, count]) => 
-  filteredPosts.some(post => post.career === career && post.career !== "Zero" && post.career !== "ไม่มีงาน")
-);
+  const filteredCareers = Object.entries(
+    careerCount
+  ).filter(([career, count]) =>
+    filteredPosts.some(
+      (post) =>
+        post.career === career &&
+        post.career !== "Zero" &&
+        post.career !== "ไม่มีงาน"
+    )
+  );
 
   return (
-     <>
+    <>
       <h1>Careers</h1>
       <select onChange={(e) => setStartYear(e.target.value)} value={startYear}>
         <option value="">All</option>
