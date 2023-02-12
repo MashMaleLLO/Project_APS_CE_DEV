@@ -9,7 +9,7 @@ import pandas as pd
 import csv
 import codecs
 from django.views.decorators.csrf import csrf_exempt
-from django.db.models import Q
+from django.db.models import Count, Q
 from pandasql import sqldf
 
 import os
@@ -162,6 +162,20 @@ def uc01_getGradResult(request, curri, year):
 @csrf_exempt
 def uc02_getPredResultByYear(request, curri, year):
     return 1
+
+@csrf_exempt
+def get_career_result(request):
+    if request.method == 'GET':
+        students = Student.objects.all()
+        students = pd.DataFrame(list(students.values()))
+        query = "select sub.career,count(sub.student_id) from (select student_id, career from students where career <> 'Zero' group by student_id ) as sub group by sub.career"
+        students = (sqldf(query)).values.tolist()
+        res = {}
+        for i in students:
+            d = {i[0]:i[1]}
+            res.update(d)
+        return JsonResponse(res, safe=False ,json_dumps_params={'ensure_ascii': False})
+    return JsonResponse("Mismatch Request")            
 
 #####UC03############
 

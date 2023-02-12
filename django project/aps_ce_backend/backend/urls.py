@@ -51,4 +51,6 @@ urlpatterns = [
 
     #UC01
     url(r'^getGradResult/(?P<curri>\w+)/(?P<year>\w+)$', view.uc01_getGradResult),
+
+    url(r'^getCareerResult/', view.get_career_result),
 ]
