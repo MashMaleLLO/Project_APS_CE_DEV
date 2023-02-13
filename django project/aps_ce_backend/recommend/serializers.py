@@ -1,6 +1,6 @@
 from dataclasses import field
 from rest_framework import serializers
-from .models import Student, Subject_Data, CSV_File
+from .models import Student, Subject_Data, CSV_File, Rec_User
 
 class StudentSerializer(serializers.ModelSerializer):
     class Meta:
@@ -16,3 +16,8 @@ class CSVSerializer(serializers.ModelSerializer):
     class Meta:
         model=CSV_File
         fields=('name', 'upload_date', 'update_date', 'del_flag', 'type_data', 'file')
+
+class RecUSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Rec_User
+        fields = ('id', 'username', 'password')

@@ -3,8 +3,8 @@ from urllib import response
 from django.http.response import JsonResponse
 from django.http import HttpResponse
 from recommend import views as recc
-from recommend.models import Student, Subject_Data, CSV_File
-from recommend.serializers import StudentSerializer, SubjectSerializer, CSVSerializer
+from recommend.models import Student, Subject_Data, CSV_File, Rec_User
+from recommend.serializers import StudentSerializer, SubjectSerializer, CSVSerializer, RecUSerializer
 import pandas as pd
 import csv
 import codecs
@@ -27,6 +27,10 @@ from datetime import datetime
 from nltk.corpus import stopwords
 # STOPWORDS = set(stopwords.words('english'))
 # nlp = en_core_web_sm.load()
+
+from rest_framework import generics, status, authentication, permissions
+import jwt
+import datetime
 
 def hello(requset):
     return JsonResponse("Hi", safe=False)
@@ -168,11 +172,14 @@ def get_career_result(request):
     if request.method == 'GET':
         students = Student.objects.all()
         students = pd.DataFrame(list(students.values()))
-        query = "select sub.career,count(sub.student_id) from (select student_id, career from students where career <> 'Zero' group by student_id ) as sub group by sub.career"
+        query = "select sub.career, sub.start_year, count(sub.student_id) as cnt_student from (select student_id, career, start_year from students where career <> 'Zero' group by student_id) as sub group by sub.career order by career, start_year;"
         students = (sqldf(query)).values.tolist()
         res = {}
         for i in students:
-            d = {i[0]:i[1]}
+            d = {i[0]:{
+                "Year": i[1],
+                "Num_of_student": i[2]
+            }}
             res.update(d)
         return JsonResponse(res, safe=False ,json_dumps_params={'ensure_ascii': False})
     return JsonResponse("Mismatch Request")            
@@ -234,3 +241,72 @@ def getPossibleYear(request):
     return JsonResponse(year , safe=False, json_dumps_params={'ensure_ascii': False})
 
 #####UC03############
+
+######Register######
+class RegisterUser(generics.CreateAPIView):
+    queryset = Rec_User.objects.all()
+    serializer_class = RecUSerializer
+    authentication_classes = []
+    permission_classes = []
+
+    @csrf_exempt
+    def post(self, request, *args, **kwargs):
+        serializer = self.serializer_class(data=request.data)
+
+        if serializer.is_valid():
+            username = serializer.validated_data['username']
+            password = serializer.validated_data['password']
+
+            if Rec_User.objects.filter(username=username).exists():
+                res = {
+                "message": "Username already exists.",
+                "status": status.HTTP_400_BAD_REQUEST
+                }
+                return JsonResponse(res, safe=False)
+
+            user = Rec_User()
+            user.username = username
+            user.set_password(password)
+            user.save()
+
+            res = {
+            "message": "User registered successfully.",
+            "status": status.HTTP_201_CREATED 
+            }
+            return JsonResponse(res, safe=False)
+        res = {
+            "message": serializer.errors,
+            "status": status.HTTP_400_BAD_REQUEST
+        }
+        return JsonResponse(res ,safe=False)
+
+####LOGIN#######
+class LoginUser(generics.CreateAPIView):
+    queryset = Rec_User.objects.all()
+    serializer_class = RecUSerializer
+    authentication_classes = []
+    permission_classes = []
+
+    @csrf_exempt
+    def post(self, request, *args, **kwargs):
+        username = request.data.get("username", "")
+        password = request.data.get("password", "")
+
+        user = Rec_User.objects.filter(username=username).first()
+        if not user or not user.check_password(password):
+                res = {
+                    "message":"Invalid username or password.",
+                    "status": status.HTTP_401_UNAUTHORIZED
+                }
+                return JsonResponse(res, safe=False)
+        
+        token = jwt.encode({
+                'id': user.id,
+                'exp': datetime.datetime.utcnow() + datetime.timedelta(days=1)
+            }, 'secret', algorithm='HS256')
+            
+        res = {
+                "message": token.decode('utf-8'),
+                "status": status.HTTP_200_OK
+        }
+        return JsonResponse(res, safe=False)
