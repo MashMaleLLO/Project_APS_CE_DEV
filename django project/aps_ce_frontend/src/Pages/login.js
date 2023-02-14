@@ -1,12 +1,16 @@
 import React, { useState } from "react";
 import axios from "axios";
 import { useNavigate } from 'react-router-dom';
+import {createRoot} from 'react-dom/client';
 
 const Login = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const navigate = useNavigate();
+
+  const rootElement = document.getElementById('root');
+  const root = createRoot(rootElement);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -16,7 +20,7 @@ const Login = () => {
         password,
       });
       const { data } = response;
-      if (data.success) {
+      if (data.message) {
         localStorage.setItem("isLoggedIn", true);
         navigate(``);
       } else {
