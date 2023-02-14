@@ -5,6 +5,7 @@ from picklefield.fields import PickledObjectField
 from pytz import timezone
 import pytz
 from datetime import datetime
+import bcrypt
 # Create your models here.
 class Student(models.Model):
       student_id = models.CharField(max_length=300)
@@ -40,4 +41,15 @@ class CSV_File(models.Model):
       def save(self, *args, **kwargs):
             self.update_date = datetime.now(pytz.timezone('Asia/Bangkok'))
             return super().save(*args, **kwargs)
+class Rec_User(models.Model):
+    username = models.CharField(max_length=150, unique=True)
+    password = models.CharField(max_length=255)
 
+    def set_password(self, password):
+        self.salt = bcrypt.gensalt()
+        hashpw = bcrypt.hashpw(password.encode('utf-8'), salt=self.salt)
+        self.password = hashpw.decode('utf-8')
+        
+        
+    def check_password(self, password):
+        return bcrypt.checkpw(password.encode('utf-8'), self.password.encode('utf-8'))

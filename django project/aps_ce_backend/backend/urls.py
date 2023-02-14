@@ -17,6 +17,7 @@ from django.contrib import admin
 from django.urls import path
 from django.urls import re_path as url
 from backend import view
+from backend.view import RegisterUser, LoginUser
 from recommend import views as recc
 
 urlpatterns = [
@@ -53,4 +54,8 @@ urlpatterns = [
     url(r'^getGradResult/(?P<curri>\w+)/(?P<year>\w+)$', view.uc01_getGradResult),
 
     url(r'^getCareerResult/', view.get_career_result),
+
+    url(r'^register', RegisterUser.as_view(), name='register'),
+
+    url(r'^signin',LoginUser.as_view(), name='login')
 ]
