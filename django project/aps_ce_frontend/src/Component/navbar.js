@@ -67,7 +67,7 @@ export default function Navbar() {
           <Button
             variant="h1"
             component="div"
-            sx={{ flexGrow: 5 }}
+            sx={{ flexGrow: 1 }}
             onClick={login}
           >
             เข้าสู่ระบบ

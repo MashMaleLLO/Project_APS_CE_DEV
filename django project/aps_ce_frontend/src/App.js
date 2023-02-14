@@ -14,6 +14,7 @@ import Login from './Pages/login'
 import RecommendSubject from './Pages/recommendSubject'
 
 import Navbar from './Component/navbar';
+import Footer from './Component/footer';
 import { theme } from './Component/theme';
 import { ThemeProvider } from '@mui/material/styles';
 
@@ -37,6 +38,7 @@ function App() {
             <Route path="/careerUpdate" element={<center><CareerUpdate/></center>} />
             
         </Routes>
+        <Footer/>
         </ThemeProvider>
     );
 }
