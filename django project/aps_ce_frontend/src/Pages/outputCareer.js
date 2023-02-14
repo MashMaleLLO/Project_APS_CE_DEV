@@ -1,57 +1,34 @@
-import React from "react";
-import axios from "axios";
-import { useState, useEffect } from "react";
-import _ from "lodash";
+import { useState, useEffect } from 'react';
+import React from 'react';
+import axios from 'axios';
 
-const baseURL = "http://localhost:8000/students";
-
-const OutputCareer = () => {
-  const [posts, setPosts] = useState([]);
-  const [startYear, setStartYear] = useState("");
+function OutputCareer() {
+  const [careerData, setCareerData] = useState({});
 
   useEffect(() => {
-    axios.get(baseURL).then((response) => {
-      setPosts(response.data);
-    });
-  }, [startYear]);
+    axios.get('http://localhost:8000/getCareerResult')
+      .then(response => {
+        setCareerData(response.data);
+      })
+      .catch(error => {
+        console.log(error);
+      });
+  }, []);
 
-  if (!posts) return null;
-
-  const careerCount = _.countBy(posts, "career");
-  const filteredPosts = posts.filter(
-    (post) => post.start_year === startYear || startYear === ""
-  );
-
-  const filteredCareers = Object.entries(
-    careerCount
-  ).filter(([career, count]) =>
-    filteredPosts.some(
-      (post) =>
-        post.career === career &&
-        post.career !== "Zero" &&
-        post.career !== "ไม่มีงาน"
-    )
-  );
+  console.log(careerData);
 
   return (
-    <>
-      <h1>Careers</h1>
-      <select onChange={(e) => setStartYear(e.target.value)} value={startYear}>
-        <option value="">All</option>
-        <option value="2560">2560</option>
-        <option value="2561">2561</option>
-        <option value="2562">2562</option>
-        <option value="2563">2563</option>
-      </select>
+    <div>
+      <h1>Career Result</h1>
       <ul>
-        {filteredCareers.map(([career, count]) => (
-          <li key={career}>
-            {career}: {count}
+        {Object.keys(careerData).map((career, index) => (
+          <li key={index}>
+            {career}: {careerData[career].Num_of_student}
           </li>
         ))}
       </ul>
-    </>
+    </div>
   );
-};
+}
 
 export default OutputCareer;
