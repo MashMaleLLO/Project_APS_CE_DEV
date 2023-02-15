@@ -22,7 +22,8 @@ const Login = () => {
       const { data } = response;
       if (data.message) {
         localStorage.setItem("isLoggedIn", true);
-        navigate(``);
+        console.log('kuycaffee')
+        navigate(`/`);
       } else {
         setErrorMessage(data.message);
       }
@@ -35,7 +36,7 @@ const Login = () => {
 
   const handleLogout = () => {
     localStorage.removeItem("isLoggedIn");
-    navigate(``);
+    navigate(`/`);
   };
 
   return (
@@ -67,6 +68,7 @@ const Login = () => {
         {errorMessage && <div style={{ color: "red" }}>{errorMessage}</div>}
       </form>
       {localStorage.getItem("isLoggedIn") === "true" && (
+        
         <div>
           <button onClick={handleLogout}>Logout</button>
         </div>
