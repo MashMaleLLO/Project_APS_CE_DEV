@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import axios from "axios";
+import ModelList from "./modelList";
+import YearList from "./listPossibleYear";
 
 const PredictStudent = () => {
   let formData = new FormData();
@@ -14,8 +16,9 @@ const PredictStudent = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    console.log(e.target.model.value)
     async function fetchData() {
-      let res = await axios.post("http://localhost:8000/test", formData);
+      let res = await axios.post("http://localhost:8000/reqPredict", formData);
       console.log(res.data);
     }
 
@@ -26,14 +29,14 @@ const PredictStudent = () => {
     e.preventDefault();
     async function getfile() {
       let res = await axios({
-        url: "http://localhost:8000/downloadCsv", //your url
+        url: "http://localhost:8000/reqAna/" + e.target.curri.value + "/" + e.target.year.value, //your url
         method: "GET",
         responseType: "blob", // important
       }).then((response) => {
         const url = window.URL.createObjectURL(new Blob([response.data]));
         const link = document.createElement("a");
         link.href = url;
-        link.setAttribute("download", "APS_CE_Template.csv"); //or any other extension
+        link.setAttribute("download", "2560fileformat.csv"); //or any other extension
         document.body.appendChild(link);
         link.click();
       });
@@ -43,8 +46,13 @@ const PredictStudent = () => {
 
   return (
     <div className="flex flex-col gap-6 justify-center items-center h-screen">
-      <h1>File CSV Uploader</h1>
+      <h1>Upload your grade CSV (Save file as CSV-UTF-8)</h1>
       <form onSubmit={handleSubmit}>
+        <ModelList></ModelList>
+        {/* <select name='pred'>
+          <option value="Grade">Predict By Grade</option>
+          <option value="Class">Predict By Class</option>
+        </select> */}
         <input type="file" accept=".csv" onChange={handleChange} />
         <button
           type="submit"
@@ -54,7 +62,14 @@ const PredictStudent = () => {
         </button>
       </form>
       <br></br>
-      <button onClick={getDownloadFile}>DownloadCSVFile</button>
+      <form onSubmit={getDownloadFile}>
+        <select name='curri'>
+          <option value="computer">วิศวกรรมคอมพิวเตอร์</option>
+          <option value="computerNext">วิศวกรรมคอมพิวเตอร์ (ต่อเนื่อง)</option>
+        </select>
+        <YearList></YearList>
+        <button type="submit">Download CSV Format For subject 2560</button>
+      </form>
     </div>
   );
 };
