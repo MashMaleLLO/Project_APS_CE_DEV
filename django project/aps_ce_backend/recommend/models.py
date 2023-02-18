@@ -7,16 +7,20 @@ import pytz
 from datetime import datetime
 import bcrypt
 # Create your models here.
-class Student(models.Model):
+class Student_Grade(models.Model):
       student_id = models.CharField(max_length=300)
       subject_id = models.CharField(max_length=20)
       grade = models.CharField(max_length=10, default='Zero')
       semester = models.CharField(max_length=5)
       year = models.CharField(max_length=10)
+
+class Student_Data(models.Model):
+      student_id = models.CharField(max_length=300)
       curriculum = models.CharField(max_length=100)
       status = models.CharField(max_length=100, default='ungraduate')
       career = models.CharField(max_length=100, default='Zero')
       start_year = models.CharField(max_length=100, default='Zero')
+
 
 class Subject_Data(models.Model):
       subject_id = models.CharField(max_length=300)
@@ -41,6 +45,7 @@ class CSV_File(models.Model):
       def save(self, *args, **kwargs):
             self.update_date = datetime.now(pytz.timezone('Asia/Bangkok'))
             return super().save(*args, **kwargs)
+
 class Rec_User(models.Model):
     username = models.CharField(max_length=150, unique=True)
     password = models.CharField(max_length=255)

@@ -3,8 +3,8 @@ from urllib import response
 from django.http.response import JsonResponse
 from django.http import HttpResponse
 from recommend import views as recc
-from recommend.models import Student, Subject_Data, CSV_File, Rec_User
-from recommend.serializers import StudentSerializer, SubjectSerializer, CSVSerializer, RecUSerializer
+from recommend.models import Subject_Data, CSV_File, Rec_User
+from recommend.serializers import StudentSerializer, SubjectSerializer, RecUSerializer
 import pandas as pd
 import csv
 import codecs
@@ -30,7 +30,6 @@ from nltk.corpus import stopwords
 
 from rest_framework import generics, status, authentication, permissions
 import jwt
-import datetime
 
 def hello(requset):
     return JsonResponse("Hi", safe=False)
@@ -40,42 +39,83 @@ def Throw(request):
     return JsonResponse(a,safe=False)
 
 @csrf_exempt
-def csvHandler(request):
-    csv_file = request.FILES['path_to_csv']
-    df = pd.read_csv(csv_file, dtype={0:'string',1:'string', 2:'string', 3:'string', 4:'string', 5:'string' , 6:'string'}, encoding='utf-8')
+def student_grade_database_handler(request, csv_id = 2):
+    df_lis = list(CSV_File.objects.all().values())
+    df = None
+    f_name = None
+    for i in df_lis:
+        if str(i['id']) == str(csv_id):
+            df = i['file']
+            f_name = i['name']
+            df = cPickle.loads(df)
+    if df is None:
+        res = {'message':'error file not found', 'status': status.HTTP_400_BAD_REQUEST}
+        return JsonResponse(res, safe=False)
+    df = df.astype(str)
     print(df)
-    lis = []
-    for index, row in df.iterrows():
-        strt = '0'
-        subId = row['subject_id']
-        if len(subId) < 8:
-            strt += row['subject_id']
-            subId = strt
-        df.at[index, 'subject_id'] = subId
-    res = recc.addStudent(df)
-    return JsonResponse(res, safe=False)
-    
+    res_from_stu_grade = recc.addStudent_grade(df)
+    res_from_stu_data = recc.addStudent_data(df)
+    if res_from_stu_grade:
+        res = {"message":f'Update file {f_name} Complete', "status": status.HTTP_200_OK}
+        return JsonResponse(res, safe=False)
+    else:
+        res = {"message": f'Error occure : data {res_from_stu_data}, grade {res_from_stu_grade}', "status": status.HTTP_400_BAD_REQUEST}
+        return JsonResponse(res, safe=False)
 
 
 @csrf_exempt
-def csv_upload(request, type_data):
+def update_career(request, csv_id = 3):
+    df_lis = list(CSV_File.objects.all().values())
+    df = None
+    f_name = None
+    for i in df_lis:
+        if str(i['id']) == str(csv_id):
+            df = i['file']
+            f_name = i['name']
+            df = cPickle.loads(df)
+    if df is None:
+        res = {'message':'error file not found', 'status': status.HTTP_400_BAD_REQUEST}
+        return JsonResponse(res, safe=False)
+    df = df.astype(str)
+    res_from_update_career = recc.career_update(df)
+    if res_from_update_career:
+        res = {"message":f'All career has been update by file : {f_name}', "status": status.HTTP_200_OK}
+        return JsonResponse(res, safe=False)
+    else:
+        res = {"message":"Update failed", "status": status.HTTP_400_BAD_REQUEST}
+        return JsonResponse(res, safe=False)
+
+
+@csrf_exempt
+def subject_csv_upload_hander(request, csv_id = 4):
+    df_lis = list(CSV_File.objects.all().values())
+    df = None
+    f_name = None
+    for i in df_lis:
+        if str(i['id']) == str(csv_id):
+            df = i['file']
+            f_name = i['name']
+            df = cPickle.loads(df)
+    if df is None:
+        res = {'message':'error file not found', 'status': status.HTTP_400_BAD_REQUEST}
+        return JsonResponse(res, safe=False)
+    df = df.astype(str)
+    csvHandlerSubject(df)
+    return None    
+
+
+@csrf_exempt
+def csv_upload(request, type_data='ข้อมูลรายวิชา'):
     if request.method == 'POST':
-        csv_file = request.FILES['file']
+        csv_file = request.FILES['path_to_csv']
         if not csv_file.name.endswith('.csv'):
             return JsonResponse("File format not match pls upload only .csv file", safe=False)
-        df = pd.read_csv(csv_file)
+        df = pd.read_csv(csv_file, encoding='utf-8')
+        print(df)
         df = df.astype(str) # cast all columns to str
         pickled_data = cPickle.dumps(df)
-        csv_m = {
-            "name": csv_file.name,
-            "upload_date": datetime.now(pytz.timezone('Asia/Bangkok')),
-            "update_date": datetime.now(pytz.timezone('Asia/Bangkok')),
-            "del_flag": "0",
-            "type_data": type_data,
-            "file": pickled_data
-        }
-        csv_m = CSVSerializer(csv_m, data=csv_m)
-        if csv_m.is_valid():
+        if pickled_data:
+            csv_m = CSV_File(name = csv_file.name, upload_date = datetime.now(pytz.timezone('Asia/Bangkok')), update_date = datetime.now(pytz.timezone('Asia/Bangkok')), del_flag = "0", type_data = type_data, file = pickled_data)
             csv_m.save()
             return JsonResponse(f'Upload file {csv_file.name} complete.', safe=False)
         else:
@@ -84,12 +124,11 @@ def csv_upload(request, type_data):
 
 
 @csrf_exempt
-def csvHandlerSubject(request):
+def csvHandlerSubject(df):
     nltk.download('stopwords')
     STOPWORDS = set(stopwords.words('english'))
     nlp = en_core_web_sm.load()
-    csv_file = request.FILES['path_to_csv']
-    df_subject_pre_nlp = pd.read_csv(csv_file,dtype={0:'string',1:'string', 2:'string', 3:'string', 4:'string', 5:'string', 6:'string', 7:'string'},encoding='utf-8')
+    df_subject_pre_nlp = df
     for index, row in df_subject_pre_nlp.iterrows():
         strt = '0'
         subId = row['subject_id']
@@ -135,7 +174,7 @@ def csvHandlerSubject(request):
                 thisdict[num] = [df_subject_pre_nlp.loc[df_subject_pre_nlp.index == i, 'subject_id'].iloc[0]]
                 num += 1
     res = recc.addSubject(df_subject_pre_nlp, thisdict)
-    return JsonResponse(res, safe=False)
+    return JsonResponse("Hi", safe=False)
 
 
 def csvDownload(request):
@@ -271,7 +310,7 @@ class RegisterUser(generics.CreateAPIView):
 
             res = {
             "message": "User registered successfully.",
-            "status": status.HTTP_201_CREATED 
+            "status": status.HTTP_200_OK
             }
             return JsonResponse(res, safe=False)
         res = {

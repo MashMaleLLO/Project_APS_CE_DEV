@@ -22,19 +22,26 @@ from recommend import views as recc
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    url(r'^hello', view.hello),
-    url(r'^throw', view.Throw),
-    url(r'^test', view.csvHandler),
+    url(r'^fileUpload$', view.csv_upload), ##Api gate way for upload file
+    url(r'^fileUpload/(?P<st_id>\w+)$', view.csv_upload), ##Api gate way for upload file
     url(r'^downloadCsv',view.csvDownload),
+
+    url(r'^ingest_student_csv',view.student_grade_database_handler), ##Up CSV to student data and grade
+
+    url(r'^ingest_subject_csv',view.subject_csv_upload_hander), ##Up CSV to subject
     
-    url(r'^students$',recc.studentApi),
-    url(r'^students/(?P<id>\w+)$',recc.studentApi),
-    url(r'^students/(?P<id>\w+)/(?P<sid>\w+)$',recc.studentApi),
-    url(r'^studentsUpdateStatus$',recc.studentUpdateStatus),
-    url(r'^studentUpdateCareer$',recc.studentUpdateCareer),
-    url(r'^studentUpdateCareer/(?P<id>\w+)$',recc.studentUpdateCareer),
+    url(r'^students_data$',recc.student_data_api), ##Api gate way of student data
+    url(r'^students_data/(?P<id>\w+)$',recc.student_data_api),  ##Api gate way of student data
+
+    url(r'^students_grade$',recc.student_grade_api),  ##Api gate way of student grade
+    url(r'^students_grade/(?P<st_id>\w+)$',recc.student_grade_api),  ##Api gate way of student grade
+    url(r'^students_grade/(?P<st_id>\w+)/(?P<su_id>\w+)$',recc.student_grade_api),  ##Api gate way of student grade
+
+    url(r'^update_career$',view.update_career),  ##Api gate way of update career
+
+    # url(r'^studentUpdateCareer$',recc.studentUpdateCareer),
+    # url(r'^studentUpdateCareer/(?P<id>\w+)$',recc.studentUpdateCareer),
     url(r'^studentThatHaveJob$',recc.getStudentWithJob),
-    url(r'^updateStudentStartYear', recc.addStudentStartYear),
 
 
     url(r'^myModels$',recc.surpriseModel),
@@ -57,5 +64,5 @@ urlpatterns = [
 
     url(r'^register', RegisterUser.as_view(), name='register'),
 
-    url(r'^signin',LoginUser.as_view(), name='login')
+    url(r'^signin',LoginUser.as_view(), name='login'),
 ]

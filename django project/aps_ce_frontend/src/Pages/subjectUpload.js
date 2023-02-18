@@ -15,7 +15,7 @@ const SubjectUpload = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     async function fetchData() {
-      let res = await axios.post("http://localhost:8000/uploadSubject", formData);
+      let res = await axios.post("http://localhost:8000/fileUpload", formData);
       console.log(res.data);
     }
 
