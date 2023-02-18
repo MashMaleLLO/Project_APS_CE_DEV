@@ -22,7 +22,6 @@ const Login = () => {
       const { data } = response;
       if (data.message) {
         localStorage.setItem("isLoggedIn", true);
-        console.log('kuycaffee')
         navigate(`/`);
       } else {
         setErrorMessage(data.message);

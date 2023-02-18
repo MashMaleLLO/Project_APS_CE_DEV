@@ -27,6 +27,19 @@ export default function Navbar() {
     let login = `login`;
     navigate(login);
   };
+  const subjectUpload = () => {
+    let subjectUpload = `subjectUpload`;
+    navigate(subjectUpload);
+  };
+
+  const isLoggedIn = localStorage.getItem("isLoggedIn") === "true";
+
+  const handleLogout = () => {
+    if (window.confirm("Are you sure you want to log out?")) {
+      localStorage.removeItem("isLoggedIn");
+      navigate(`/`);
+    }
+  };
 
   return (
     <Box sx={{ flexGrow: 1 }}>
@@ -64,14 +77,35 @@ export default function Navbar() {
           >
             แนะนำวิชาเลือก
           </Button>
-          <Button
-            variant="h1"
-            component="div"
-            sx={{ flexGrow: 1 }}
-            onClick={login}
-          >
-            เข้าสู่ระบบ
-          </Button>
+          {isLoggedIn && (
+            <Button
+              variant="h1"
+              component="div"
+              sx={{ flexGrow: 1 }}
+              onClick={subjectUpload}
+            >
+              อัพโหลดไฟล์
+            </Button>
+          )}
+          {isLoggedIn ? (
+            <Button
+              variant="h1"
+              component="div"
+              sx={{ flexGrow: 1 }}
+              onClick={handleLogout}
+            >
+              ออกจากระบบ
+            </Button>
+          ) : (
+            <Button
+              variant="h1"
+              component="div"
+              sx={{ flexGrow: 1 }}
+              onClick={login}
+            >
+              เข้าสู่ระบบ
+            </Button>
+          )}
         </Toolbar>
       </AppBar>
     </Box>
