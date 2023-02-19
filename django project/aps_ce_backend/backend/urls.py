@@ -22,8 +22,15 @@ from recommend import views as recc
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    url(r'^hello$', view.hello),
     url(r'^fileUpload$', view.csv_upload), ##Api gate way for upload file
-    url(r'^fileUpload/(?P<st_id>\w+)$', view.csv_upload), ##Api gate way for upload file
+    url(r'^fileUpload/(?P<id>\w+)$', view.csv_upload), ##Api gate way for upload file
+
+    url(r'^getFile$', recc.file_api), ##Api gate way for upload file
+    url(r'^getFile/(?P<id>\w+)$', recc.file_api), ##Api gate way for upload file
+    url(r'^delFlageFile$', view.csv_delete_handler), ##Api gate way for delete flag files
+    url(r'^recoverFile/(?P<id>\w+)$', view.file_recover), ##Api gate way for recover flag files
+
     url(r'^downloadCsv',view.csvDownload),
 
     url(r'^ingest_student_csv',view.student_grade_database_handler), ##Up CSV to student data and grade
@@ -32,6 +39,7 @@ urlpatterns = [
     
     url(r'^students_data$',recc.student_data_api), ##Api gate way of student data
     url(r'^students_data/(?P<id>\w+)$',recc.student_data_api),  ##Api gate way of student data
+    url(r'^students_data/(?P<id>\w+)/(?P<curri>\w+)$',recc.student_data_api),  ##Api gate way of student data
 
     url(r'^students_grade$',recc.student_grade_api),  ##Api gate way of student grade
     url(r'^students_grade/(?P<st_id>\w+)$',recc.student_grade_api),  ##Api gate way of student grade
@@ -58,9 +66,10 @@ urlpatterns = [
     url(r'^getPossibleYear', view.getPossibleYear),
 
     #UC01
-    url(r'^getGradResult/(?P<curri>\w+)/(?P<year>\w+)$', view.uc01_getGradResult),
-
     url(r'^getCareerResult/', view.get_career_result),
+    url(r'^getCareerResult/(?P<curri>\w+)$', view.get_career_result),
+
+    # url(r'^getGradResult/(?P<curri>\w+)/(?P<year>\w+)$', view.uc01_getGradResult),
 
     url(r'^register', RegisterUser.as_view(), name='register'),
 

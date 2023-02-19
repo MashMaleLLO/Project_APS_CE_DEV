@@ -5,7 +5,7 @@ from unittest.util import safe_repr
 from urllib import response
 from django.views.decorators.csrf import csrf_exempt
 from django.http.response import JsonResponse
-from .models import Student_Data, Student_Grade,Subject_Data, SurpriseModel
+from .models import Student_Data, Student_Grade,Subject_Data, SurpriseModel, CSV_File
 from .serializers import StudentGradeSerializer, StudentSerializer, SubjectSerializer
 from rest_framework.parsers import JSONParser
 from django.db.models import Q
@@ -57,13 +57,55 @@ def surpriseModel(request,id=0):
     return JsonResponse("BAD REQUEST", safe=False)
 
 @csrf_exempt
-def student_data_api(request, id=0):
-  if request.method == 'GET':
+def file_api(request, id=0):
+  if request.method=='GET':
     if id == 0:
-      student = Student_Data.objects.all()
-      student_serializer = StudentSerializer(student, many=True)
-      res = {"message":student_serializer.data, "status": status.HTTP_200_OK}
-      return JsonResponse(res, safe=False, json_dumps_params={'ensure_ascii': False})
+      res = pd.DataFrame(list(CSV_File.objects.filter(del_flag= '0').values()))
+      res = res[['id','name', 'upload_date', 'update_date', 'del_flag', 'type_data']].to_dict('records')
+      res = { "message" : res, "status": status.HTTP_200_OK }
+    else:
+      this_file = list(CSV_File.objects.filter(id = id).values())
+      if this_file == []:
+        res = {"message" : f'cant find the file with id {id}', "status" : status.HTTP_400_BAD_REQUEST}
+      else:
+        this_file = pd.DataFrame(this_file)
+        res = this_file[['id','name', 'upload_date', 'update_date', 'del_flag', 'type_data']].to_dict('records')[0]
+        res = { "message" : res, "status": status.HTTP_200_OK }
+  elif request.method=='DELETE':
+    if id == 0:
+      res = {"message" : "Pls enter file id" , "status" : status.HTTP_400_BAD_REQUEST}
+    else:
+      this_file = list(CSV_File.objects.filter(id = id).values())
+      if this_file == []:
+        res = {"message" : f'Can not find file with id {id}' , "status" : status.HTTP_400_BAD_REQUEST}
+      else:
+        this_file = CSV_File.objects.get(id = id)
+        this_file.del_flag = '1'
+        this_file.save()
+        res = {"message" : f'Delete file id {this_file.name} Complete', "status" : status.HTTP_200_OK}
+  else:
+    res = {"message":"Request method not match", "status": status.HTTP_400_BAD_REQUEST}
+  return JsonResponse(res, safe=False)
+
+@csrf_exempt
+def student_data_api(request, id='all', curri='Default'):
+  if request.method == 'GET':
+    if id == 'all':
+      if curri == 'All':
+        student = Student_Data.objects.all()
+        student_serializer = StudentSerializer(student, many=True)
+        res = {"message":student_serializer.data, "status": status.HTTP_200_OK}
+        return JsonResponse(res, safe=False, json_dumps_params={'ensure_ascii': False})
+      elif curri == 'Default':
+        student = Student_Data.objects.filter(curriculum__in = ['วิศวกรรมคอมพิวเตอร์', 'วิศวกรรมคอมพิวเตอร์ (ต่อเนื่อง)'])
+        student_serializer = StudentSerializer(student, many=True)
+        res = {"message":student_serializer.data, "status": status.HTTP_200_OK}
+        return JsonResponse(res, safe=False, json_dumps_params={'ensure_ascii': False})
+      else:
+        student = Student_Data.objects.filter(curriculum = curri)
+        student_serializer = StudentSerializer(student, many=True)
+        res = {"message":student_serializer.data, "status": status.HTTP_200_OK}
+        return JsonResponse(res, safe=False, json_dumps_params={'ensure_ascii': False})
     else:
       student = list(Student_Data.objects.filter(student_id = id).values())
       if student == []:
@@ -114,18 +156,24 @@ def student_data_api(request, id=0):
           return JsonResponse(res, safe=False, json_dumps_params={'ensure_ascii': False})
 
 @csrf_exempt
-def student_grade_api(request, st_id=0, su_id=0):
+def student_grade_api(request, st_id='all', su_id='all'):
   if request.method == 'GET':
-    if st_id == 0:
-      student = Student_Grade.objects.all()
-      student_serializer = StudentGradeSerializer(student, many=True)
-      res = {"message":student_serializer.data, "status": status.HTTP_200_OK}
+    if st_id == 'all':
+      student_data = pd.DataFrame(list(Student_Data.objects.all().values()))
+      student_grade = pd.DataFrame(list(Student_Grade.objects.all().values()))
+      result = pd.merge(student_grade, student_data, how='left', on='student_id')
+      result = result[['student_id', 'subject_id', 'grade', 'semester', 'year', 'curriculum']]
+      data_list = result.to_dict('records')
+      res = {"message":data_list, "status": status.HTTP_200_OK}
       return JsonResponse(res, safe=False, json_dumps_params={'ensure_ascii': False})
     else:
-      if su_id == 0:
-        student = Student_Grade.objects.filter(student_id = st_id)
-        student_serializer = StudentGradeSerializer(student, many=True)
-        res = {"message":student_serializer.data, "status": status.HTTP_200_OK}
+      if su_id == 'all':
+        student_data = pd.DataFrame(list(Student_Data.objects.all().values()))
+        student_grade = pd.DataFrame(list(Student_Grade.objects.filter(student_id = st_id).values()))
+        result = pd.merge(student_grade, student_data, how='left', on='student_id')
+        result = result[['student_id', 'subject_id', 'grade', 'semester', 'year', 'curriculum']]
+        data_list = result.to_dict('records')
+        res = {"message":data_list, "status": status.HTTP_200_OK}
         return JsonResponse(res, safe=False, json_dumps_params={'ensure_ascii': False})
       else:
         student = list(Student_Grade.objects.filter(student_id = st_id, subject_id = su_id).values())
@@ -133,10 +181,12 @@ def student_grade_api(request, st_id=0, su_id=0):
           res = {"message":f'cant not find student id {st_id} with sub id {su_id}', "status": status.HTTP_404_NOT_FOUND}
           return JsonResponse(res, safe=False)
         else:
-          student = student[0]['id']
-          student = Student_Grade.objects.get(id=student)
-          student_serializer = StudentGradeSerializer(student)
-          res = {"message":student_serializer.data, "status": status.HTTP_200_OK}
+          student_data = pd.DataFrame(list(Student_Data.objects.all().values()))
+          student_grade = pd.DataFrame(list(Student_Grade.objects.filter(student_id = st_id, subject_id = su_id).values()))
+          result = pd.merge(student_grade, student_data, how='left', on='student_id')
+          result = result[['student_id', 'subject_id', 'grade', 'semester', 'year', 'curriculum']]
+          data_list = result.to_dict('records')
+          res = {"message":data_list, "status": status.HTTP_200_OK}
           return JsonResponse(res, safe=False, json_dumps_params={'ensure_ascii': False})
   elif request.method == 'PUT':
     if st_id == 0:
@@ -232,62 +282,7 @@ def career_update(df):
   res = True
   return res
 
-@csrf_exempt
-def studentUpdateCareer(request, id=0):
-  if id == 0:
-    csv_file = request.FILES['path_to_csv']
-    df = pd.read_csv(csv_file, dtype={0:'string',1:'string'}, encoding='utf-8')
-    print("Read File Complete And Start Loop")
-    for index, row in df.iterrows():
-      print(".")
-      this_student = Student_Data.objects.filter(student_id=row['student_id'])
-      this_student = list(this_student.values())
-      if this_student == []:
-        pass
-      else:
-        for i in this_student:
-          update_data = {
-            "student_id":i['student_id'],
-            "subject_id":i['subject_id'],
-            "grade":i['grade'],
-            "semester":i['semester'],
-            "year":i['year'],
-            "curriculum":i['curriculum'],
-            "status": i["status"],
-            "career":row['job'],
-            "start_year":i['start_year']
-          }
-          student_serializer = StudentSerializer(Student.objects.get(id=i['id']), data=update_data)
-          if student_serializer.is_valid():
-            student_serializer.save()
-          else:
-            return JsonResponse("Failed to update", safe=False)
-    return JsonResponse("Update Complete", safe=False)
-  else:
-    student_data=JSONParser().parse(request)
-    this_student = Student.objects.filter(student_id=id)
-    this_student = list(this_student.values())
-    if this_student == []:
-      return JsonResponse("Cant Find this Student", safe=False)
-    else:
-      for i in this_student:
-        update_data = {
-          "student_id":i['student_id'],
-          "subject_id":i['subject_id'],
-          "grade":i['grade'],
-          "semester":i['semester'],
-          "year":i['year'],
-          "curriculum":i['curriculum'],
-          "status":"graduate",
-          "career":student_data['career'],
-          "start_year":i['start_year']
-        }
-        student_serializer = StudentSerializer(Student.objects.get(id=i['id']), data=update_data)
-        if student_serializer.is_valid():
-          student_serializer.save()
-        else:
-          return JsonResponse("Failed to update", safe=False)
-      return JsonResponse("Update Complete", safe=False)
+
 
 
 @csrf_exempt
@@ -331,9 +326,14 @@ def addStudent_grade(df):
     # df = dropUnUseRecc(df)
     df['grade'] = df['grade'].fillna('Zero')
     for index,student in df.iterrows():
+        strt = '0'
+        subId = student['subject_id']
+        if len(subId) < 8:
+          strt += student['subject_id']
+          subId = strt
         dic = {
             "student_id":student['student_id'],
-            "subject_id":student['subject_id'],
+            "subject_id":subId,
             "grade":student['grade'],
             "semester":student['semester'],
             "year":student['year']
