@@ -3,7 +3,7 @@ from urllib import response
 from django.http.response import JsonResponse
 from django.http import HttpResponse
 from recommend import views as recc
-from recommend.models import Subject_Data, CSV_File, Rec_User
+from recommend.models import Student_Data,Subject_Data, CSV_File, Rec_User
 from recommend.serializers import StudentSerializer, SubjectSerializer, RecUSerializer
 import pandas as pd
 import csv
@@ -22,7 +22,7 @@ import pickle as cPickle
 import json
 from pytz import timezone
 import pytz
-from datetime import datetime
+from datetime import datetime, timedelta
 # nltk.download('stopwords')
 from nltk.corpus import stopwords
 # STOPWORDS = set(stopwords.words('english'))
@@ -209,10 +209,12 @@ def uc02_getPredResultByYear(request, curri, year):
 @csrf_exempt
 def get_career_result(request):
     if request.method == 'GET':
-        students = Student.objects.all()
+        students = Student_Data.objects.all()
         students = pd.DataFrame(list(students.values()))
-        query = "select sub.career, sub.start_year, count(sub.student_id) as cnt_student from (select student_id, career, start_year from students where career <> 'Zero' group by student_id) as sub group by sub.career order by career, start_year;"
+        print(students)
+        query = "select count(student_id) count_student, career, start_year from students group by career"
         students = (sqldf(query)).values.tolist()
+        print(students)
         res = {}
         for i in students:
             d = {i[0]:{
@@ -341,7 +343,7 @@ class LoginUser(generics.CreateAPIView):
         
         token = jwt.encode({
                 'id': user.id,
-                'exp': datetime.datetime.utcnow() + datetime.timedelta(days=1)
+                'exp': datetime.utcnow() + timedelta(days=1)
             }, 'secret', algorithm='HS256')
             
         res = {
