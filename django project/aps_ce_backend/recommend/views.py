@@ -90,6 +90,9 @@ def file_api(request, id=0):
 @csrf_exempt
 def student_data_api(request, id='all', curri='Default'):
   if request.method == 'GET':
+    if request.body:
+      body = json.loads(request.body)
+      curri = body['curriculum']
     if id == 'all':
       if curri == 'All':
         student = Student_Data.objects.all()
@@ -154,6 +157,7 @@ def student_data_api(request, id='all', curri='Default'):
           student.delete()
           res = {"message": f'Delete {student_serializer.data}', "status": status.HTTP_200_OK}
           return JsonResponse(res, safe=False, json_dumps_params={'ensure_ascii': False})
+  return JsonResponse(res, safe=False, json_dumps_params={'ensure_ascii': False})
 
 @csrf_exempt
 def student_grade_api(request, st_id='all', su_id='all'):
@@ -428,8 +432,8 @@ def addSubject(df, thisdict):
               subject_serializer.save()
               print(f'save {subject_serializer.data}')
           else:
-              res = "Failed to add"
-              print(res)
+              res = False
+              print("Failed to add")
               return res
         else:
           subject_serializer = SubjectSerializer(this_subject,data=dic)
@@ -437,10 +441,10 @@ def addSubject(df, thisdict):
               subject_serializer.save()
               print(f'Update {subject_serializer.data}')
           else:
-              res = "Failed to add"
-              print(res)
+              res = False
+              print("Failed to add")
               return res
-    res = 'Complete add' 
+    res = True 
     return res
 
 def queryBycurriculum(df):

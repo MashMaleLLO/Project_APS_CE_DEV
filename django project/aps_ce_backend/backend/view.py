@@ -44,74 +44,104 @@ def Throw(request):
     return JsonResponse(a,safe=False)
 
 @csrf_exempt
-def student_grade_database_handler(request, csv_id = 2):
-    df_lis = list(CSV_File.objects.all().values())
-    df = None
-    f_name = None
-    for i in df_lis:
-        if str(i['id']) == str(csv_id):
-            df = i['file']
-            f_name = i['name']
-            df = cPickle.loads(df)
-    if df is None:
-        res = {'message':'error file not found', 'status': status.HTTP_400_BAD_REQUEST}
-        return JsonResponse(res, safe=False)
-    df = df.astype(str)
-    print(df)
-    res_from_stu_grade = recc.addStudent_grade(df)
-    res_from_stu_data = recc.addStudent_data(df)
-    if res_from_stu_grade:
-        res = {"message":f'Update file {f_name} Complete', "status": status.HTTP_200_OK}
-        return JsonResponse(res, safe=False)
-    else:
-        res = {"message": f'Error occure : data {res_from_stu_data}, grade {res_from_stu_grade}', "status": status.HTTP_400_BAD_REQUEST}
-        return JsonResponse(res, safe=False)
-
-
-@csrf_exempt
-def update_career(request, csv_id = 5):
-    df_lis = list(CSV_File.objects.all().values())
-    df = None
-    f_name = None
-    for i in df_lis:
-        if str(i['id']) == str(csv_id):
-            df = i['file']
-            f_name = i['name']
-            df = cPickle.loads(df)
-    if df is None:
-        res = {'message':'error file not found', 'status': status.HTTP_400_BAD_REQUEST}
-        return JsonResponse(res, safe=False)
-    df = df.astype(str)
-    res_from_update_career = recc.career_update(df)
-    if res_from_update_career:
-        res = {"message":f'All career has been update by file : {f_name}', "status": status.HTTP_200_OK}
-        return JsonResponse(res, safe=False)
-    else:
-        res = {"message":"Update failed", "status": status.HTTP_400_BAD_REQUEST}
-        return JsonResponse(res, safe=False)
-
-
-@csrf_exempt
-def subject_csv_upload_hander(request, csv_id = 4):
-    df_lis = list(CSV_File.objects.all().values())
-    df = None
-    f_name = None
-    for i in df_lis:
-        if str(i['id']) == str(csv_id):
-            df = i['file']
-            f_name = i['name']
-            df = cPickle.loads(df)
-    if df is None:
-        res = {'message':'error file not found', 'status': status.HTTP_400_BAD_REQUEST}
-        return JsonResponse(res, safe=False)
-    df = df.astype(str)
-    csvHandlerSubject(df)
-    return None    
-
-
-@csrf_exempt
-def csv_upload(request, id=0, type_data='ข้อมูลอาชีพ'):
+def student_grade_database_handler(request, csv_id = 0):
     if request.method == 'POST':
+        if request.body:
+            body = json.loads(request.body)
+            csv_id = body['id']
+            df_lis = list(CSV_File.objects.all().values())
+            df = None
+            f_name = None
+            for i in df_lis:
+                if str(i['id']) == str(csv_id):
+                    df = i['file']
+                    f_name = i['name']
+                    df = cPickle.loads(df)
+            if df is None:
+                res = {'message':'error file not found', 'status': status.HTTP_400_BAD_REQUEST}
+            else:
+                df = df.astype(str)
+                print(df)
+                res_from_stu_grade = recc.addStudent_grade(df)
+                res_from_stu_data = recc.addStudent_data(df)
+                if res_from_stu_grade:
+                    res = {"message":f'Update file {f_name} Complete', "status": status.HTTP_200_OK}
+                else:
+                    res = {"message": f'Error occure : data {res_from_stu_data}, grade {res_from_stu_grade}', "status": status.HTTP_400_BAD_REQUEST}
+        else:
+            res = {"message": "error pls enter file id.", "status": status.HTTP_400_BAD_REQUEST}
+    else:
+        res = {"message": "error method doesn't match.", "status":status.HTTP_400_BAD_REQUEST}
+    return JsonResponse(res, safe=False)
+
+
+@csrf_exempt
+def update_career(request, csv_id = 0):
+    if request.method == 'POST':
+        if request.body:
+            body = json.loads(request.body)
+            csv_id = body['id']
+            df_lis = list(CSV_File.objects.all().values())
+            df = None
+            f_name = None
+            for i in df_lis:
+                if str(i['id']) == str(csv_id):
+                    df = i['file']
+                    f_name = i['name']
+                    df = cPickle.loads(df)
+            if df is None:
+                res = {'message':'error file not found', 'status': status.HTTP_400_BAD_REQUEST}
+            else:
+                df = df.astype(str)
+                res_from_update_career = recc.career_update(df)
+                if res_from_update_career:
+                    res = {"message":f'All career has been update by file : {f_name}', "status": status.HTTP_200_OK}
+                else:
+                    res = {"message":"Update failed", "status": status.HTTP_400_BAD_REQUEST}
+        else:
+            res = {"message": "error pls enter file id.", "status": status.HTTP_400_BAD_REQUEST}
+    else:
+        res = {"message": "error method doesn't match.", "status":status.HTTP_400_BAD_REQUEST}
+    return JsonResponse(res, safe=False)
+
+
+@csrf_exempt
+def subject_csv_upload_hander(request, csv_id = 0):
+    if request.method == 'POST':
+        if request.body:
+            body = json.loads(request.body)
+            csv_id = body['id']
+            df_lis = list(CSV_File.objects.all().values())
+            df = None
+            f_name = None
+            for i in df_lis:
+                if str(i['id']) == str(csv_id):
+                    df = i['file']
+                    f_name = i['name']
+                    df = cPickle.loads(df)
+            if df is None:
+                res = {'message':'error file not found', 'status': status.HTTP_400_BAD_REQUEST}
+            else:
+                df = df.astype(str)
+                res = nlp_subject_handler(df)
+                if res:
+                    res = {'message': 'Complete upload subject data.', 'status': status.HTTP_200_OK}
+                else:
+                    res = {'message': 'Error in a upload progress pls check log.', 'status': status.HTTP_200_OK}
+        else:
+            res = {"message": "error pls enter file id.", "status": status.HTTP_400_BAD_REQUEST}
+    else:
+        res = {"message": "error method doesn't match.", "status":status.HTTP_400_BAD_REQUEST}
+    return JsonResponse(res, safe=False)    
+
+
+@csrf_exempt
+def csv_upload(request, id=0, type_data='ไม่ระบุ'):
+    if request.method == 'POST':
+        if request.body:
+            file_info = json.loads(request.body)
+            type_data = file_info['type_data']
+            print(type_data)
         csv_file = None
         if 'path_to_csv' in request.FILES:
             csv_file = request.FILES['path_to_csv']
@@ -129,7 +159,7 @@ def csv_upload(request, id=0, type_data='ข้อมูลอาชีพ'):
             else:
                 res = {"message":"serializer is not valid", "status" : status.HTTP_400_BAD_REQUEST}
         else:
-            res = {"message":"error can't find any find pls upload again", "status" : status.HTTP_400_BAD_REQUEST}
+            res = {"message":"error can't find any file pls upload again", "status" : status.HTTP_400_BAD_REQUEST}
         return JsonResponse(res, safe=False)
     elif request.method == 'PUT':
         if id == 0:
@@ -225,7 +255,7 @@ def csv_delete_handler(request):
 
 
 @csrf_exempt
-def csvHandlerSubject(df):
+def nlp_subject_handler(df):
     nltk.download('stopwords')
     STOPWORDS = set(stopwords.words('english'))
     nlp = en_core_web_sm.load()
@@ -275,15 +305,15 @@ def csvHandlerSubject(df):
                 thisdict[num] = [df_subject_pre_nlp.loc[df_subject_pre_nlp.index == i, 'subject_id'].iloc[0]]
                 num += 1
     res = recc.addSubject(df_subject_pre_nlp, thisdict)
-    return JsonResponse("Hi", safe=False)
+    return res
 
 
-def csvDownload(request):
-    response = HttpResponse(content_type='text/csv')
-    writer = csv.writer(response)
-    writer.writerow(['Fname','Lname','Nname'])
-    response['Content-Disposition'] = 'attachment; filename="APS_CE.csv"'
-    return response
+# def csvDownload(request):
+#     response = HttpResponse(content_type='text/csv')
+#     writer = csv.writer(response)
+#     writer.writerow(['Fname','Lname','Nname'])
+#     response['Content-Disposition'] = 'attachment; filename="APS_CE.csv"'
+#     return response
 
 # @csrf_exempt
 # def uc01_getGradResult(request, curri, year):
@@ -303,22 +333,24 @@ def csvDownload(request):
 #     else:
 #         return JsonResponse("Can not Found any students" , safe=False, json_dumps_params={'ensure_ascii': False})
 
-@csrf_exempt
-def uc02_getPredResultByYear(request, curri, year):
-    print("Hi")
-    return 1
+# @csrf_exempt
+# def uc02_getPredResultByYear(request, curri, year):
+#     print("Hi")
+#     return 1
 
 
 ### UC01 ###
 @csrf_exempt
-def get_career_result(request, curri='Default'):
+def get_career_result(request):
     if request.method == 'GET':
         students = Student_Data.objects.all()
         students = pd.DataFrame(list(students.values()))
-        if curri == 'Default':
-            query = "select start_year, career,count(student_id) count_student from students where career <> \'Zero\' and (curriculum = \'วิศวกรรมคอมพิวเตอร์\' or curriculum = \'วิศวกรรมคอมพิวเตอร์ (ต่อเนื่อง)\') group by start_year, career order by start_year, career"
-        else:
+        if request.body:
+            body = json.loads(request.body)
+            curri = body['curriculum']
             query = f'select start_year, career,count(student_id) count_student from students where career <> \'Zero\' and curriculum = \'{curri}\' group by start_year, career order by start_year, career'
+        else:
+            query = "select start_year, career,count(student_id) count_student from students where career <> \'Zero\' and (curriculum = \'วิศวกรรมคอมพิวเตอร์\' or curriculum = \'วิศวกรรมคอมพิวเตอร์ (ต่อเนื่อง)\') group by start_year, career order by start_year, career"
         students = (sqldf(query)).values.tolist()
         res = {}
         print(students)
@@ -328,31 +360,35 @@ def get_career_result(request, curri='Default'):
                 "Num_of_student": i[2]
             }}
             res.update(d)
-        return JsonResponse(res, safe=False ,json_dumps_params={'ensure_ascii': False})
-    return JsonResponse("Mismatch Request")            
+        res = {"message": res, "status": status.HTTP_200_OK}
+    else:
+        res = {"message": "Method not match.", "status": status.HTTP_400_BAD_REQUEST}
+    return JsonResponse(res, safe=False ,json_dumps_params={'ensure_ascii': False})            
 
 #####UC03############
 
 @csrf_exempt
-def csv2560Download(request, curri, year):
-    subjects = list(Subject_Data.objects.all().values())
-    if curri == 'computer':
-        response = HttpResponse(content_type='text/csv')
-        response.write(codecs.BOM_UTF8)
-        writer = csv.writer(response)
-        writer.writerow(['student_id','subject_id','grade', 'curriculum', 'Want_To_Predict'])
-        for i in subjects:
-            print(i['subject_id'])
-            writer.writerow(['Optional',i['subject_id'],'Your Grade', 'วิศวกรรมคอมพิวเตอร์'])
-        response['Content-Disposition'] = 'attachment; filename="2560fileformat.csv"'
+def csv_template_generator(request, curri, year):
+    if request.method == 'POST':
+        if request.body:
+            body = json.loads(request.body)
+            curri = body['curriculum']
+            year = body['year']
+            subjects = list(Subject_Data.objects.filter(year = year).values())
+            response = HttpResponse(content_type='text/csv')
+            response.write(codecs.BOM_UTF8)
+            writer = csv.writer(response)
+            writer.writerow(['student_id','subject_id','grade', 'curriculum', 'Want_To_Predict'])
+            for i in subjects:
+                print(i['subject_id'])
+                writer.writerow(['Optional',i['subject_id'],'Your Grade', curri])
+            response['Content-Disposition'] = 'attachment; filename="csv_file_template.csv"'
+            return response
+        else:
+            res = {"message": "pls choose file type (year/curriculum).", "status": status.HTTP_400_BAD_REQUEST}
     else:
-        response = HttpResponse(content_type='text/csv')
-        writer = csv.writer(response)
-        writer.writerow(['student_id','subject_id','grade', 'curriculum', 'Want_to_Predict'])
-        for i in subjects:
-            writer.writerow(['Optional',i['subject_id'],'Your Grade', 'วิศวกรรมคอมพิวเตอร์ (ต่อเนื่อง)'])
-        response['Content-Disposition'] = 'attachment; filename="2560fileformat.csv"'
-    return response
+        res = {"message": "Method not match.", "status": status.HTTP_400_BAD_REQUEST}
+    return JsonResponse(res, safe=False)
 
     #####UC05######
 @csrf_exempt
@@ -382,7 +418,7 @@ def gradeUploader(request):
 
 @csrf_exempt
 def getPossibleYear(request):
-    students = list(Student.objects.all().values())
+    students = list(Student_Data.objects.all().values())
     df = pd.DataFrame(students)
     year = list(df['start_year'].unique())
     return JsonResponse(year , safe=False, json_dumps_params={'ensure_ascii': False})
