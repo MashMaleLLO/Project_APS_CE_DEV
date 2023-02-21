@@ -69,7 +69,7 @@ def student_grade_database_handler(request, csv_id = 2):
 
 
 @csrf_exempt
-def update_career(request, csv_id = 3):
+def update_career(request, csv_id = 5):
     df_lis = list(CSV_File.objects.all().values())
     df = None
     f_name = None
@@ -110,7 +110,7 @@ def subject_csv_upload_hander(request, csv_id = 4):
 
 
 @csrf_exempt
-def csv_upload(request, id=0, type_data='ข้อมูลรายวิชา'):
+def csv_upload(request, id=0, type_data='ข้อมูลอาชีพ'):
     if request.method == 'POST':
         csv_file = None
         if 'path_to_csv' in request.FILES:
@@ -321,6 +321,7 @@ def get_career_result(request, curri='Default'):
             query = f'select start_year, career,count(student_id) count_student from students where career <> \'Zero\' and curriculum = \'{curri}\' group by start_year, career order by start_year, career'
         students = (sqldf(query)).values.tolist()
         res = {}
+        print(students)
         for i in students:
             d = {i[1]:{
                 "Year": i[2],
