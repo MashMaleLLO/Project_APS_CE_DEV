@@ -1,7 +1,7 @@
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 
-import SubjectUpload from './Pages/subjectUpload';
+import DataUpload from './Pages/dataUpload';
 import GenModel from './Pages/genModel';
 import ModelList from './Pages/modelList';
 import CareerUpdate from './Pages/updateStudentCareer';
@@ -28,9 +28,8 @@ function App() {
             <Route path="/predictStudent" element={<center><PredictStudent/></center>} />
             <Route path="/recommendSubject" element={<center><RecommendSubject/></center>} />
             <Route path="/login" element={<center><Login/></center>} />
+            <Route path="/dataUpload" element={<center><DataUpload/></center>} />
 
-
-            <Route path="/subjectUpload" element={<center><SubjectUpload/></center>} />
             <Route path="/genModel" element={<center><GenModel/></center>} />
             <Route path="/temp" element={<center><ModelList/></center>} />
             <Route path="/careerUpdate" element={<center><CareerUpdate/></center>} />

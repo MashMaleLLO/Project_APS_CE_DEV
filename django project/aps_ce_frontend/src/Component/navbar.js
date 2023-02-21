@@ -27,9 +27,9 @@ export default function Navbar() {
     let login = `login`;
     navigate(login);
   };
-  const subjectUpload = () => {
-    let subjectUpload = `subjectUpload`;
-    navigate(subjectUpload);
+  const dataUpload = () => {
+    let dataUpload = `dataUpload`;
+    navigate(dataUpload);
   };
 
   const isLoggedIn = localStorage.getItem("isLoggedIn") === "true";
@@ -82,7 +82,7 @@ export default function Navbar() {
               variant="h1"
               component="div"
               sx={{ flexGrow: 1 }}
-              onClick={subjectUpload}
+              onClick={dataUpload}
             >
               อัพโหลดไฟล์
             </Button>
