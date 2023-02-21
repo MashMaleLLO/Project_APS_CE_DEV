@@ -305,6 +305,7 @@ def csvDownload(request):
 
 @csrf_exempt
 def uc02_getPredResultByYear(request, curri, year):
+    print("Hi")
     return 1
 
 
