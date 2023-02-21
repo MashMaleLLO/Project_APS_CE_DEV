@@ -324,8 +324,8 @@ def get_career_result(request, curri='Default'):
         print(students)
         for i in students:
             d = {i[1]:{
-                "Year": i[2],
-                "Num_of_student": i[0]
+                "Year": i[0],
+                "Num_of_student": i[2]
             }}
             res.update(d)
         return JsonResponse(res, safe=False ,json_dumps_params={'ensure_ascii': False})
