@@ -72,4 +72,7 @@ urlpatterns = [
     url(r'^register', RegisterUser.as_view(), name='register'),
 
     url(r'^signin',LoginUser.as_view(), name='login'),
+
+     # UC06
+    url(r'^getrecommendSubject', view.recommendSubject),
 ]

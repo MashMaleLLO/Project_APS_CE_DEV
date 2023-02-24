@@ -445,37 +445,40 @@ def addSubjectClasstoDF(thisdict, subject_id):
 @csrf_exempt
 def addSubject(df, thisdict):
     df['subject_key'] = df['subject_key'].fillna('อื่นๆ')
-    for index,subject in df.iterrows():
+    for index, subject in df.iterrows():
         subject_class = addSubjectClasstoDF(thisdict, subject['subject_id'])
         dic = {
-            "subject_id":subject['subject_id'],
-            "subject_name_thai":subject['subject_name_thai'],
-            "subject_name_eng":subject['subject_name_eng'],
-            "abstract":subject['abstract'],
-            "subject_key":subject['subject_key'],
-            "year":subject['year'],
+            "subject_id": subject['subject_id'],
+            "subject_name_thai": subject['subject_name_thai'],
+            "subject_name_eng": subject['subject_name_eng'],
+            "abstract": subject['abstract'],
+            "subject_key": subject['subject_key'],
+            "year": subject['year'],
             "subject_class": subject_class
         }
-        this_subject = Subject_Data.objects.get(subject_id = subject['subject_id'], subject_name_thai = subject['subject_name_thai'], subject_name_eng = subject['subject_name_eng'])
-        if this_subject == None:
-          subject_serializer = SubjectSerializer(data=dic)
-          if subject_serializer.is_valid():
-              subject_serializer.save()
-              print(f'save {subject_serializer.data}')
-          else:
-              res = False
-              print("Failed to add")
-              return res
+        this_subject = list(Subject_Data.objects.filter(
+            subject_id=subject['subject_id'], subject_name_thai=subject['subject_name_thai'], subject_name_eng=subject['subject_name_eng'], year=subject['year']).values())
+        if this_subject == []:
+            subject_serializer = SubjectSerializer(data=dic)
+            if subject_serializer.is_valid():
+                subject_serializer.save()
+                print(f'save {subject_serializer.data}')
+            else:
+                res = False
+                print("Failed to add")
+                return res
         else:
-          subject_serializer = SubjectSerializer(this_subject,data=dic)
-          if subject_serializer.is_valid():
-              subject_serializer.save()
-              print(f'Update {subject_serializer.data}')
-          else:
-              res = False
-              print("Failed to add")
-              return res
-    res = True 
+            this_subject = Subject_Data.objects.get(
+                subject_id=subject['subject_id'], subject_name_thai=subject['subject_name_thai'], subject_name_eng=subject['subject_name_eng'])
+            subject_serializer = SubjectSerializer(this_subject, data=dic)
+            if subject_serializer.is_valid():
+                subject_serializer.save()
+                print(f'Update {subject_serializer.data}')
+            else:
+                res = False
+                print("Failed to add")
+                return res
+    res = True
     return res
 
 def queryBycurriculum(df):

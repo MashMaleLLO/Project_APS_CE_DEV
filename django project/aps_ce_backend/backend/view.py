@@ -304,7 +304,7 @@ def nlp_subject_handler(df):
             if check != 1:
                 thisdict[num] = [df_subject_pre_nlp.loc[df_subject_pre_nlp.index == i, 'subject_id'].iloc[0]]
                 num += 1
-    res = recc.addSubject(df_subject_pre_nlp, thisdict)
+    res = recc.addSubject(df, thisdict)
     return res
 
 @csrf_exempt
@@ -506,3 +506,37 @@ class LoginUser(generics.CreateAPIView):
                 "status": status.HTTP_200_OK
         }
         return JsonResponse(res, safe=False)
+    
+@csrf_exempt
+def recommendSubject(request):
+    if request.method == 'GET':
+        if request.body:
+            subjects = Subject_Data.objects.all()
+            subjects = pd.DataFrame(list(subjects.values()))
+            body = json.loads(request.body)
+            df = pd.DataFrame()
+            key = body['key']
+            year = body['year']
+            for i in key:
+                query = f'select subject_name_eng, subject_id, abstract from subjects where subject_key like \'%{i}%\' COLLATE utf8mb4_thai_ci and year = \'{year}\''
+                tempdf = sqldf(query)
+                df = pd.concat([df, tempdf])
+            subjects = (df).values.tolist()
+            print(subjects)
+            res = []
+            for i in subjects:
+                d = {
+                    "subject_name_eng": i[0],
+                    "subject_id": i[1],
+                    "abstract": i[2]
+                }
+                res.append(d)
+            print(res)
+            res = {"message": res, "status": status.HTTP_200_OK}
+        else:
+            res = {
+                "message": "pls choose file type (year/key).", "status": status.HTTP_400_BAD_REQUEST}
+    else:
+        res = {"message": "Method not match.",
+               "status": status.HTTP_400_BAD_REQUEST}
+    return JsonResponse(res, safe=False, json_dumps_params={'ensure_ascii': False})
