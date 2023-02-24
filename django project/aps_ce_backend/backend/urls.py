@@ -24,14 +24,13 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     url(r'^hello$', view.hello),
     url(r'^fileUpload$', view.csv_upload), ##Api gate way for upload file
-    url(r'^fileUpload/(?P<id>\w+)$', view.csv_upload), ##Api gate way for upload file
 
     url(r'^getFile$', recc.file_api), ##Api gate way for upload file
     url(r'^getFile/(?P<id>\w+)$', recc.file_api), ##Api gate way for upload file
     url(r'^delFlageFile$', view.csv_delete_handler), ##Api gate way for delete flag files
     url(r'^recoverFile/(?P<id>\w+)$', view.file_recover), ##Api gate way for recover flag files
 
-    url(r'^downloadCsv',view.csvDownload),
+    # url(r'^downloadCsv',view.csvDownload),
 
     url(r'^ingest_student_csv',view.student_grade_database_handler), ##Up CSV to student data and grade
 
@@ -56,18 +55,17 @@ urlpatterns = [
 
     url(r'^getModel/(?P<curri>\w+)$', recc.generateModel),
 
-    url(r'^uploadSubject$', view.csvHandlerSubject),
+    url(r'^uploadSubject$', view.nlp_subject_handler),
     url(r'^subjects$',recc.subjectApi),
     url(r'^subjects/(?P<id>\w+)$',recc.subjectApi),
 
     #UC03
-    url(r'^reqAna/(?P<curri>\w+)/(?P<year>\w+)$', view.csv2560Download),
+    url(r'^reqAna$', view.csv_template_generator), ### สร้าง file csv
     url(r'^reqPredict', view.gradeUploader),
     url(r'^getPossibleYear', view.getPossibleYear),
 
     #UC01
     url(r'^getCareerResult/', view.get_career_result),
-    url(r'^getCareerResult/(?P<curri>\w+)$', view.get_career_result),
 
     # url(r'^getGradResult/(?P<curri>\w+)/(?P<year>\w+)$', view.uc01_getGradResult),
 
