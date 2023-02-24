@@ -51,9 +51,9 @@ urlpatterns = [
     url(r'^studentThatHaveJob$',recc.getStudentWithJob),
 
 
-    url(r'^myModels$',recc.surpriseModel),
+    url(r'^myModels$',recc.surpriseModel), ### api สร้าง model rec
 
-    url(r'^getModel/(?P<curri>\w+)$', recc.generateModel),
+    url(r'^create_Rec_Model$', recc.generate_rec_model),
 
     url(r'^uploadSubject$', view.nlp_subject_handler),
     url(r'^subjects$',recc.subjectApi),

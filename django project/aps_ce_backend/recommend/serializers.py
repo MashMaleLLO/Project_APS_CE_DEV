@@ -11,7 +11,7 @@ class StudentGradeSerializer(serializers.ModelSerializer):
 class StudentSerializer(serializers.ModelSerializer):
     class Meta:
         model=Student_Data
-        fields=('student_id', 'curriculum', 'status', 'career', 'start_year')
+        fields=('student_id', 'curriculum', 'status', 'career', 'start_year', 'curriculum_year')
 
 class SubjectSerializer(serializers.ModelSerializer):
     class Meta:

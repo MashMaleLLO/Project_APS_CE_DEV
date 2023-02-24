@@ -33,6 +33,8 @@ import numpy as np
 from rest_framework import generics, status, authentication, permissions
 import jwt
 
+from backend import view as backend
+
 def catch():
     lis = ['a','b','c']
     return lis
@@ -244,7 +246,7 @@ def career_update(df):
   student = list(student.values())
   df_student_data = pd.DataFrame(student)
   career_df = df
-  join_q = "select df_student_data.student_id, df_student_data.curriculum, df_student_data.status, career_df.job as career, start_year from df_student_data left join career_df on df_student_data.student_id = career_df.student_id"
+  join_q = "select df_student_data.student_id, df_student_data.curriculum, df_student_data.status, career_df.job as career, start_year, curriculum_year from df_student_data left join career_df on df_student_data.student_id = career_df.student_id"
   final_df = sqldf(join_q)
   for index,student in final_df.iterrows():
     if student['career'] is None:
@@ -253,7 +255,8 @@ def career_update(df):
         "curriculum":student['curriculum'],
         "status":student['status'],
         "career":"Zero",
-        "start_year":student['start_year']
+        "start_year":student['start_year'],
+        "curriculum_year": student['curriculum_year']
       }
     else:
       dic = {
@@ -261,7 +264,8 @@ def career_update(df):
         "curriculum":student['curriculum'],
         "status":student['status'],
         "career":student['career'],
-        "start_year":student['start_year']
+        "start_year":student['start_year'],
+        "curriculum_year": student['curriculum_year']
       }
     this_student = list(Student_Data.objects.filter(student_id = dic['student_id']).values())
     if this_student == []:
@@ -311,18 +315,39 @@ def subjectApi(request,id=0):
     if id == 0:
       subjects = Subject_Data.objects.all()
       subjects_serializer = SubjectSerializer(subjects, many=True)
-      return JsonResponse(subjects_serializer.data, safe=False, json_dumps_params={'ensure_ascii': False})
+      res = {"message": subject_serializer.data, "status": status.HTTP_200_OK}
+      return JsonResponse(res, safe=False, json_dumps_params={'ensure_ascii': False})
     else:
       subject = Subject_Data.objects.get(subject_id = id)
       subject_serializer = SubjectSerializer(subject)
-      return JsonResponse(subject_serializer.data, safe=False, json_dumps_params={'ensure_ascii': False})
+      res = {"message": subject_serializer.data, "status": status.HTTP_200_OK}
+      return JsonResponse(res, safe=False, json_dumps_params={'ensure_ascii': False})
   elif request.method == 'POST':
-      subject_data=JSONParser().parse(request)
-      subject_serializer=SubjectSerializer(data=subject_data)
-      if subject_serializer.is_valid():
-        subject_serializer.save()
-        return JsonResponse("Added Successfully",safe=False)
-      return JsonResponse("Failed to Add",safe=False)
+    subject_data=JSONParser().parse(request)
+    subject_serializer=SubjectSerializer(data=subject_data)
+    if subject_serializer.is_valid():
+      subject_serializer.save()
+      res = {"message": f'save {subject_serializer.data} success pls manualy update subject groups.', "status": status.HTTP_200_OK}
+    else:
+      res = {"message": subject_serializer.errors, "status": status.HTTP_400_BAD_REQUEST}
+    return JsonResponse(res, safe=False, json_dumps_params={'ensure_ascii': False})
+  elif request.method == 'PUT':
+    if id == 0:
+      res = {"message": "pls fill in subject id", "status": status.HTTP_400_BAD_REQUEST}
+    else:
+      this_subject = list(Subject_Data.objects.filter(subject_id = id).values())
+      if this_subject == []:
+        res = {"message": f'can\'t find subject with id : {id}', "status": status.HTTP_400_BAD_REQUEST}
+      else:
+        subject_data=JSONParser().parse(request)
+        subject_serializer = SubjectSerializer(this_subject, data = subject_data)
+        if subject_serializer.is_valid():
+          subject_serializer.save()
+          res = {"message":"complete update subject info pls manualy update subject groups.", "status": status.HTTP_200_OK}
+        else:
+          res = {"message": subject_serializer.errors, "status": status.HTTP_400_BAD_REQUEST}
+    return JsonResponse(res, safe=False, json_dumps_params={'ensure_ascii': False})
+    
 
 
 @csrf_exempt
@@ -379,9 +404,15 @@ def addStudent_data(df):
       "curriculum":student['curriculum'],
       "status":student['status'],
       "career":"Zero",
-      "start_year":student['start_year']
+      "start_year":student['start_year'],
+      "curriculum_year":'Zero'
     }
     this_student = Student_Data.objects.filter(student_id = dic['student_id'])
+    start_year = int(student['start_year'])
+    while start_year % 4 != 0:
+      start_year = start_year - 1
+    curri_year = start_year
+    dic['curriculum_year'] = str(curri_year)
     if not this_student:
       student_serializer = StudentSerializer(data=dic)
       if student_serializer.is_valid():
@@ -461,24 +492,24 @@ def queryBycurriculum(df):
 
 def transfromGrade(df):
   grade_map = {
-      "A": 4,
-      "S": 4,
-      "T(A)": 4,
-      "B+": 3.5,
-      "T(B+)": 3.5,
-      "B": 3,
-      "T(B)": 3,
-      "C+": 2.5,
-      "T(C+)": 2.5,
-      "C": 2,
-      "T(C)": 2,
-      "D+": 1.5,
-      "T(D+)": 1.5,
-      "D": 1,
-      "T(D)": 1,
-      "F": 0,
-      "T(F)": 0,
-      "U": 0,
+      "A": 4.00,
+      "S": 4.00,
+      "T(A)": 4.00,
+      "B+": 3.50,
+      "T(B+)": 3.50,
+      "B": 3.00,
+      "T(B)": 3.00,
+      "C+": 2.50,
+      "T(C+)": 2.50,
+      "C": 2.00,
+      "T(C)": 2.00,
+      "D+": 1.50,
+      "T(D+)": 1.50,
+      "D": 1.00,
+      "T(D)": 1.00,
+      "F": 0.00,
+      "T(F)": 0.00,
+      "U": 0.00,
   }
   df["grade"] = df["grade"].replace(grade_map)
   return df
@@ -575,99 +606,73 @@ def passDFStoFunc(dfs, student_id_lis, thisdict, byWhat):
   return dfs
 
 
-
 @csrf_exempt
-def generateModel(request, curri):
-    if request.method == 'POST':
-      todays_date = date.today()
-      this_year = todays_date.year + 543 - 4
-      base_year = 2560
-      year_that_grad = []
-      query = Q(start_year = str(base_year))
-      for runnub in range(base_year+1, this_year+1):
-        query.add(Q(start_year = str(runnub)), Q.OR)
-      body_unicode = request.body
-      body = json.loads(body_unicode)
-      model_name = body['name']
-      model_pred = body['pred']
-      print(model_pred)
-      qdata = list(Student.objects.filter(query).values())
-      q_subject_data = list(Subject_Data.objects.all().values())
-      df_subject = pd.DataFrame(q_subject_data)
-      thisdict = genSubjectDict(df_subject)
-      df = pd.DataFrame(qdata)
-      dfs = queryBycurriculum(df)
-      dfs = transfromAlldfs(dfs)
-      for i in dfs:
-        temp = dfs[i][0]
-        temp = temp[temp.grade != 'Zero']
-        dfs[i].append(temp)
-      # q_subjectClassAndsubId = 'SELECT subject_id, subject_class from df_subject;'
-      # df_subject = sqldf(q_subjectClassAndsubId)
-      if model_pred == 'Class':
-        for j in dfs:
-          dfs[j][0]['subject_class'] = dfs[j][0].apply (lambda row: findSubjectClass(row['subject_id'], thisdict), axis=1)
-          dfs[j][1]['subject_class'] = dfs[j][1].apply (lambda row: findSubjectClass(row['subject_id'], thisdict), axis=1)
-          # casttemp = dfs[j][1]
-          # casttemp[["grade"]] = casttemp[["grade"]].apply(pd.to_numeric)
-          # dfs[j][1] = casttemp
-        for k in dfs:
-          tempAVG = dfs[k][1]
-          q_find_AVG = "SELECT student_id, AVG(grade) as grade, semester, year, curriculum, subject_class FROM tempAVG GROUP BY subject_class, student_id ORDER BY student_id"
-          tempDFS_AVG = sqldf(q_find_AVG)
-          dfs[k][1] = tempDFS_AVG
-      min_rating = 0
-      max_rating = 4
-      reader = Reader(rating_scale=(min_rating, max_rating))
-      param_grid = {
+def train_rec_model(df, mode = 0):
+  min_rating = 0.00
+  max_rating = 4.00
+  reader = Reader(rating_scale=(min_rating, max_rating))
+  param_grid = {
         'n_factors': [20, 50, 100],
         'n_epochs': [5, 10, 20]
         }
-      for i in dfs:
-        if model_pred == 'Class':
-          data = Dataset.load_from_df(dfs[i][1][['student_id', 'subject_class', 'grade']], reader)
-        else:
-          data = Dataset.load_from_df(dfs[i][1][['student_id', 'subject_id', 'grade']], reader)
-        svd = SVD(n_epochs=10)
-        # results = cross_validate(svd, data, measures=['RMSE', 'MAE'], cv=10, verbose=True)
-        gs = GridSearchCV(SVD, param_grid, measures=['rmse', 'mae'], cv=10)
-        gs.fit(data)
-        best_factor = gs.best_params['rmse']['n_factors']
-        best_epoch = gs.best_params['rmse']['n_epochs']
-        # trainset, testset = train_test_split(data, test_size=.20)
-        # svd = SVD(n_factors=best_factor, n_epochs=best_epoch)
-        # svd.fit(trainset)
-        trainset, testset = train_test_split(data, test_size=.10)
-        svd = gs.best_estimator["rmse"]
-        svd.fit(trainset)
-        # print(gs.best_score['rmse'])
-        dfs[i].append(svd)
-        pred_model = svd.test(testset)
-        this_rmse = accuracy.rmse(pred_model, verbose=True)
-        dfs[i].append(this_rmse)
-      if curri == 'Com':
-        curri = 'วิศวกรรมคอมพิวเตอร์'
-        model_curri = str(curri)
-        model_rmse = str(dfs[curri][3])
-        model_type = str(body['pred'])
-        model_file = dfs[curri][2]
-        sur = SurpriseModel(args={'name': model_name, 'curriculum' : model_curri, 'type': model_type,'rmse': model_rmse, 'model': model_file})
-        sur.save()
-        # with open(f'recommend/ML_model/{model_type}_{model_name}_{model_curri}.pkl', 'wb') as fp:
-        #   joblib.dump(dfs[curri][2],fp)
+  if mode == 0:
+    data = Dataset.load_from_df(df[['student_id', 'subject_class', 'grade']], reader)
+  else:
+    data = Dataset.load_from_df(df[['student_id', 'subject_id', 'grade']], reader)
+  svd = SVD(n_epochs=10)
+  gs = GridSearchCV(SVD, param_grid, measures=['rmse', 'mae'], cv=10)
+  gs.fit(data)
+  best_factor = gs.best_params['rmse']['n_factors']
+  best_epoch = gs.best_params['rmse']['n_epochs']
+  trainset, testset = train_test_split(data, test_size=.10)
+  svd = gs.best_estimator["rmse"]
+  svd.fit(trainset)
+  pred_model = svd.test(testset)
+  model = {
+    "rmse" : round(accuracy.rmse(pred_model, verbose=True), 4),
+    "model" : svd
+  }
+  return model
+
+
+@csrf_exempt
+def generate_rec_model(request):
+  if request.method == 'POST':
+    if request.body:
+      body = json.loads(request.body)
+      model_name = body['name']
+      model_year = body['year']
+      model_type = body['type']
+      model_curri = body['curriculum']
+      curri_year = int(model_year)
+      while curri_year % 4 != 0:
+        curri_year = curri_year - 1
+      curri_year = str(curri_year)
+      s_data = pd.DataFrame(list(Student_Data.objects.all().values()))
+      s_grade = pd.DataFrame(list(Student_Grade.objects.all().values()))
+      sub_data = list(Subject_Data.objects.filter(year = curri_year).values())
+      sub_data_df = pd.DataFrame(sub_data)
+      thisdict = genSubjectDict(sub_data_df)
+      join_q = "select s_grade.student_id, s_grade.subject_id, s_grade.grade, s_data.career, s_data.curriculum, s_data.status, s_data.curriculum_year from s_grade left join s_data on s_grade.student_id = s_data.student_id where s_grade.subject_id NOT LIKE '90%'"
+      train_data = sqldf(join_q)
+      train_data = train_data.loc[(train_data['grade'] != 'Zero') & (train_data['grade'] != 'nan') & (train_data['curriculum'] == model_curri) & (train_data['status'] == 'graduate') & (train_data['curriculum_year'] == curri_year)]
+      train_data = transfromGrade(train_data)
+      if model_type == 'class':
+        train_data['subject_class'] = train_data.apply (lambda row: findSubjectClass(row['subject_id'], thisdict), axis=1)
+        group_query = "select student_id, subject_class, round(avg(grade), 2) as grade from train_data group by subject_class, student_id order by student_id"
+        train_data = sqldf(group_query)
+        return_model = train_rec_model(train_data)
       else:
-        curri = 'วิศวกรรมคอมพิวเตอร์ (ต่อเนื่อง)'
-        model_curri = str(curri)
-        model_rmse = str(dfs[curri][3])
-        model_type = str(body['pred'])
-        model_file = cPickle.dumps(dfs[curri][2])
-        sur = SurpriseModel(args={'name': model_name, 'curriculum' : model_curri, 'type': model_type,'rmse': model_rmse, 'model': model_file})
-        sur.save()
-        # with open(f'recommend/ML_model/{model_type}_{model_name}_{model_curri}.pkl', 'wb') as fp:
-        #   joblib.dump(dfs[curri][2],fp)
-      return JsonResponse("Hi" , safe=False, json_dumps_params={'ensure_ascii': False})
+        return_model = train_rec_model(train_data,1)
+      this_rmse = str(return_model['rmse'])
+      rec = SurpriseModel(name = model_name, curriculum = model_curri, rmse = this_rmse, type_pred = model_type, rec_model = return_model['model'])
+      rec.save()
+      res = {"message": f'Model successfuly create name : {model_name} for : {model_curri} type : {model_type} with rmse : {this_rmse}.', "status" : status.HTTP_200_OK}
     else:
-      return JsonResponse("BAD REQUEST" , safe=False, json_dumps_params={'ensure_ascii': False})
+      res = {"message": "Pls select model type and curriculum", "status": status.HTTP_400_BAD_REQUEST}
+  else:
+    res = {"message": "Method not match.", "status": status.HTTP_400_BAD_REQUEST}
+  return JsonResponse(res , safe=False, json_dumps_params={'ensure_ascii': False})
 
 
 @csrf_exempt
@@ -750,18 +755,26 @@ def reqPredictPerUser_Production(df_user):
     all_models = list(SurpriseModel.objects.all().values())
     model = None
     for i in all_models:
-        if str(i['id']) == '14':
-            model = i['args']['model']
-            model_type = i['args']['type']
+        if str(i['id']) == '1':
+            model = i['rec_model']
+            model_type = i['type_pred']
     if model is None:
         print("Model not found")
         return
     df_user = transfromGrade(df_user)
     selected_values = df_user.query("Want_To_Predict == '?'")['subject_id'].tolist()
     df_user = df_user[df_user.grade != 'Zero']
+    graded_sub = df_user['subject_id'].tolist()
     subId_name = {row['subject_id']:row['subject_name_eng'] for row in Subject_Data.objects.values()}
     subject_ids_to_pred = selected_values
-    test_set = [['Optional', sub, 4] for sub in subject_ids_to_pred]
+    test_set = []
+    for sub in graded_sub:
+      this_sub_grade = df_user.loc[df_user['subject_id'] == sub, 'grade'].iloc[0]
+      test_set.append(['Optional', sub, this_sub_grade])
+    for sub in selected_values:
+      grade = None
+      test_set.append(['Optional', sub, this_sub_grade])
+    print(test_set)
     predictions = model.test(test_set)
     pred_ratings = [pred.est for pred in predictions]
     pred_ratings = [(subject_ids_to_pred[i], pred_ratings[i]) for i in range(len(subject_ids_to_pred))]

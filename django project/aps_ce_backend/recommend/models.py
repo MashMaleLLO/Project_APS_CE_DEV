@@ -20,6 +20,7 @@ class Student_Data(models.Model):
       status = models.CharField(max_length=100, default='ungraduate')
       career = models.CharField(max_length=100, default='Zero')
       start_year = models.CharField(max_length=100, default='Zero')
+      curriculum_year = models.CharField(max_length=100, default='Zero')
 
 
 class Subject_Data(models.Model):
@@ -32,7 +33,18 @@ class Subject_Data(models.Model):
       subject_class = models.CharField(max_length=10, default='อื่นๆ')
 
 class SurpriseModel(models.Model):
-      args = PickledObjectField()
+      name = models.CharField(max_length=300, default='rec_model')
+      curriculum = models.CharField(max_length=100, default='Zero')
+      rmse = models.CharField(max_length=100, default='Zero')
+      create_date = models.DateTimeField(default=datetime.now(pytz.timezone('Asia/Bangkok')))
+      update_date = models.DateTimeField(default=datetime.now(pytz.timezone('Asia/Bangkok')))
+      del_flag = models.CharField(max_length=10, default=0)
+      type_pred = models.CharField(max_length=100, default='Zero')
+      rec_model = PickledObjectField(default='Zero')
+
+      def save(self, *args, **kwargs):
+            self.update_date = datetime.now(pytz.timezone('Asia/Bangkok'))
+            return super().save(*args, **kwargs)
 
 class CSV_File(models.Model):
       name = models.CharField(max_length=300)

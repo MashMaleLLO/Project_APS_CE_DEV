@@ -64,7 +64,7 @@ def student_grade_database_handler(request, csv_id = 0):
                 print(df)
                 res_from_stu_grade = recc.addStudent_grade(df)
                 res_from_stu_data = recc.addStudent_data(df)
-                if res_from_stu_grade:
+                if res_from_stu_data and res_from_stu_grade:
                     res = {"message":f'Update file {f_name} Complete', "status": status.HTTP_200_OK}
                 else:
                     res = {"message": f'Error occure : data {res_from_stu_data}, grade {res_from_stu_grade}', "status": status.HTTP_400_BAD_REQUEST}
@@ -307,6 +307,19 @@ def nlp_subject_handler(df):
     res = recc.addSubject(df_subject_pre_nlp, thisdict)
     return res
 
+@csrf_exempt
+def update_subject_group(request):
+    if request.method == 'PUT':
+        df = pd.DataFrame((list(Subject_Data.objects.all().values())))
+        res = nlp_subject_handler(df)
+        if res:
+            res = {"message": "Complete update subject groups." , "status": status.HTTP_200_OK}
+        else:
+            res = {"message": "error occure in update progress pls check log.", "status": status.HTTP_400_BAD_REQUEST}
+    else:
+        res = {"message": "Method not match.", "status": status.HTTP_400_BAD_REQUEST}
+    return JsonResponse(res, safe=False)
+
 
 # def csvDownload(request):
 #     response = HttpResponse(content_type='text/csv')
@@ -368,7 +381,7 @@ def get_career_result(request):
 #####UC03############
 
 @csrf_exempt
-def csv_template_generator(request, curri, year):
+def csv_template_generator(request, curri = 'วิศวกรรมคอมพิวเตอร์', year = '2562'):
     if request.method == 'POST':
         if request.body:
             body = json.loads(request.body)
