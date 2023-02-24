@@ -1,7 +1,7 @@
 import React, { useState , useEffect } from "react";
 import axios from "axios";
 
-const SubjectUpload = () => {
+const DataUpload = () => {
   let formData = new FormData();
   const [csvFile, setCsvFile] = useState();
   const [dataType, setDataType] = useState("subjectData");
@@ -78,4 +78,4 @@ const SubjectUpload = () => {
   );
 };
 
-export default SubjectUpload;
+export default DataUpload;
