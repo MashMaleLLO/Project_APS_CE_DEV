@@ -10,6 +10,7 @@ from .serializers import StudentGradeSerializer, StudentSerializer, SubjectSeria
 from rest_framework.parsers import JSONParser
 from django.db.models import Q
 from datetime import date
+from sklearn.metrics.pairwise import cosine_similarity
 # Create your views here.
 
 
@@ -497,6 +498,7 @@ def transfromGrade(df):
   grade_map = {
       "A": 4.00,
       "S": 4.00,
+      "T(S)": 4.00,
       "T(A)": 4.00,
       "B+": 3.50,
       "T(B+)": 3.50,
@@ -609,8 +611,7 @@ def passDFStoFunc(dfs, student_id_lis, thisdict, byWhat):
   return dfs
 
 
-@csrf_exempt
-def train_rec_model(df, mode = 0):
+def train_rec_model(df):
   min_rating = 0.00
   max_rating = 4.00
   reader = Reader(rating_scale=(min_rating, max_rating))
@@ -618,16 +619,13 @@ def train_rec_model(df, mode = 0):
         'n_factors': [20, 50, 100],
         'n_epochs': [5, 10, 20]
         }
-  if mode == 0:
-    data = Dataset.load_from_df(df[['student_id', 'subject_class', 'grade']], reader)
-  else:
-    data = Dataset.load_from_df(df[['student_id', 'subject_id', 'grade']], reader)
+  data = Dataset.load_from_df(df[['student_id', 'subject_id', 'grade']], reader)
   svd = SVD(n_epochs=10)
   gs = GridSearchCV(SVD, param_grid, measures=['rmse', 'mae'], cv=10)
   gs.fit(data)
   best_factor = gs.best_params['rmse']['n_factors']
   best_epoch = gs.best_params['rmse']['n_epochs']
-  trainset, testset = train_test_split(data, test_size=.10)
+  trainset, testset = train_test_split(data, test_size=.10, random_state=42)
   svd = gs.best_estimator["rmse"]
   svd.fit(trainset)
   pred_model = svd.test(testset)
@@ -640,151 +638,51 @@ def train_rec_model(df, mode = 0):
 
 @csrf_exempt
 def generate_rec_model(request):
-  if request.method == 'POST':
-    if request.body:
-      body = json.loads(request.body)
-      model_name = body['name']
-      model_year = body['year']
-      model_type = body['type']
-      model_curri = body['curriculum']
-      curri_year = int(model_year)
-      while curri_year % 4 != 0:
-        curri_year = curri_year - 1
-      curri_year = str(curri_year)
-      s_data = pd.DataFrame(list(Student_Data.objects.all().values()))
-      s_grade = pd.DataFrame(list(Student_Grade.objects.all().values()))
-      sub_data = list(Subject_Data.objects.filter(year = curri_year).values())
-      sub_data_df = pd.DataFrame(sub_data)
-      thisdict = genSubjectDict(sub_data_df)
-      join_q = "select s_grade.student_id, s_grade.subject_id, s_grade.grade, s_data.career, s_data.curriculum, s_data.status, s_data.curriculum_year from s_grade left join s_data on s_grade.student_id = s_data.student_id where s_grade.subject_id NOT LIKE '90%'"
-      train_data = sqldf(join_q)
-      train_data = train_data.loc[(train_data['grade'] != 'Zero') & (train_data['grade'] != 'nan') & (train_data['curriculum'] == model_curri) & (train_data['status'] == 'graduate') & (train_data['curriculum_year'] == curri_year)]
-      train_data = transfromGrade(train_data)
-      if model_type == 'class':
-        train_data['subject_class'] = train_data.apply (lambda row: findSubjectClass(row['subject_id'], thisdict), axis=1)
-        group_query = "select student_id, subject_class, round(avg(grade), 2) as grade from train_data group by subject_class, student_id order by student_id"
-        train_data = sqldf(group_query)
-        return_model = train_rec_model(train_data)
-      else:
-        return_model = train_rec_model(train_data,1)
-      this_rmse = str(return_model['rmse'])
-      rec = SurpriseModel(name = model_name, curriculum = model_curri, rmse = this_rmse, type_pred = model_type, rec_model = return_model['model'])
-      rec.save()
-      res = {"message": f'Model successfuly create name : {model_name} for : {model_curri} type : {model_type} with rmse : {this_rmse}.', "status" : status.HTTP_200_OK}
-    else:
-      res = {"message": "Pls select model type and curriculum", "status": status.HTTP_400_BAD_REQUEST}
-  else:
-    res = {"message": "Method not match.", "status": status.HTTP_400_BAD_REQUEST}
+  res = {"message": "Method not match.", "status": status.HTTP_400_BAD_REQUEST}
   return JsonResponse(res , safe=False, json_dumps_params={'ensure_ascii': False})
 
 
-@csrf_exempt
-def reqPredictPerUser(df_user, model_id):
-  ##### Get Curriculum From User #####
-  this_user_curri = df_user.loc[0,'curriculum']
-  ##### Find Model By It ID #####
-  all_models = list(SurpriseModel.objects.all().values())
-  model = "NOTFOUND"
-  model_type = "NOTFOUND"
-  for i in all_models:
-    if str(i['id']) == model_id:
-      model = i['args']['model']
-      model_type = i['args']['type']
-  print(model)
-  ###############################
-  response = []
-  q_subject_data = list(Subject_Data.objects.all().values())
-  df_subject = pd.DataFrame(q_subject_data)
-  ##### Create A Suject Dict {ID:NAME} #####
-  subId_name = {}
-  for index_sub, row_sub in df_subject.iterrows():
-    dic_sub = {row_sub['subject_id']:row_sub['subject_name_eng']}
-    subId_name.update(dic_sub)
-  # print(subId_name)
-  ##########################################
-  thisdict = genSubjectDict(df_subject)
-  df_user = transfromGrade(df_user)
-  df_user = df_user[df_user.grade != 'Zero']
-  qdata = list(Student.objects.filter(curriculum='วิศวกรรมคอมพิวเตอร์').values())
-  df = pd.DataFrame(qdata)
-  df = transfromGrade(df)
-  dfs = []
-  copy_origin_df = df
-  non_Zero_df = copy_origin_df[copy_origin_df.grade != 'Zero']
-  dfs.append(df)
-  dfs.append(non_Zero_df)
-  if model_type == 'Class':
-    tempAVG = dfs[1]
-    tempAVG_user = df_user 
-    df_user['subject_class'] = df.apply (lambda row: findSubjectClass(row['subject_id'], thisdict), axis=1)
-    dfs[1]['subject_class'] = dfs[1].apply (lambda row: findSubjectClass(row['subject_id'], thisdict), axis=1)
-    q_find_AVG = "SELECT student_id, AVG(grade) as grade, semester, year, curriculum, subject_class FROM tempAVG GROUP BY subject_class, student_id ORDER BY student_id"
-    q_find_AVG_user = "SELECT student_id, AVG(grade) as grade, semester, year, curriculum, subject_class FROM tempAVG_user GROUP BY subject_class, student_id ORDER BY student_id"
-    tempDFS_AVG = sqldf(q_find_AVG)
-    tempDF_AVG_USER = sqldf(q_find_AVG_user)
-    dfs[1] = tempDFS_AVG
-    df_user = tempDF_AVG_USER 
-    # model_file = joblib.load('recommend/ML_model/Class_test_New_01_วิศวกรรมคอมพิวเตอร์.pkl')
-    subject_id_in_dataset = dfs[1]['subject_class'].unique()
-    subject_id = df_user['subject_class']
-  else:
-    # model_file = joblib.load('recommend/ML_model/Grade_test_New_01_วิศวกรรมคอมพิวเตอร์.pkl')
-    subject_id_in_dataset = dfs[1]['subject_id'].unique()
-    subject_id = df_user['subject_id']
-  subject_ids_to_pred = np.setdiff1d(subject_id_in_dataset, subject_id)
-  test_set = [['Optional', sub, 4] for sub in subject_ids_to_pred]
-  # model_file = all_models[-1]['args']['model']
-  # model_file = cPickle.loads(model_file)
-  predictions = model.test(test_set)
-  pred_ratings = np.array([pred.est for pred in predictions])
-  NumOfSub = len(subject_id_in_dataset)
-  index_max = (-pred_ratings).argsort()[:NumOfSub]
-  for j in index_max:
-    sub = subject_ids_to_pred[j]
-    if model_type == 'Grade':
-      lisForFindSubId = list(subId_name.keys())
-      if sub in lisForFindSubId:
-        dic = {"subject_id" : sub, "sub_name" : subId_name[sub], "grade" : round(pred_ratings[j], 2)}
-      else:
-        dic = {"subject_id" : sub, "sub_name" : "ไม่พบวิชาในฐานข้อมูล", "grade" : round(pred_ratings[j], 2)}
-    else:
-      dic = {"subject_class" : sub, "subject_in_class": thisdict[sub],"grade" : round(pred_ratings[j], 2)}
-    response.append(dic)
-  return response
+def generate_data_set(curriculum, year):
+  curri_year = int(year)
+  while curri_year % 4 != 0:
+    curri_year = curri_year - 1
+  curri_year = str(curri_year)
+  s_data = pd.DataFrame(list(Student_Data.objects.all().values()))
+  s_grade = pd.DataFrame(list(Student_Grade.objects.all().values()))
+  sub_data = list(Subject_Data.objects.filter(year = curri_year).values())
+  sub_data_df = pd.DataFrame(sub_data)
+  thisdict = genSubjectDict(sub_data_df)
+  join_q = "select s_grade.student_id, s_grade.subject_id, s_grade.grade, s_data.career, s_data.curriculum, s_data.status, s_data.curriculum_year from s_grade left join s_data on s_grade.student_id = s_data.student_id where s_grade.subject_id NOT LIKE '90%'"
+  train_data = sqldf(join_q)
+  train_data = train_data.loc[(train_data['grade'] != 'Zero') & (train_data['grade'] != 'nan') & (train_data['curriculum'] == curriculum) & (train_data['status'] == 'graduate') & (train_data['curriculum_year'] == curri_year)]
+  train_data = transfromGrade(train_data)
+  return train_data
+
+
+def prediction_grade_user(model, student_id, selected_values):
+  predict_result = []
+  for i in selected_values:
+    d = {
+      "subject_id": i,
+      "grade": model.predict(str(student_id), str(i)).est
+    }
+    predict_result.append(d)
+  return predict_result
 
 
 
-def reqPredictPerUser_Production(df_user):    
-    all_models = list(SurpriseModel.objects.all().values())
-    model = None
-    for i in all_models:
-        if str(i['id']) == '1':
-            model = i['rec_model']
-            model_type = i['type_pred']
-    if model is None:
-        print("Model not found")
-        return
+def reqPredictPerUser_Production(df_user, student_id,curriculum, year):    
     df_user = transfromGrade(df_user)
+    main_data_set = generate_data_set(curriculum, year)
     selected_values = df_user.query("Want_To_Predict == '?'")['subject_id'].tolist()
     df_user = df_user[df_user.grade != 'Zero']
-    graded_sub = df_user['subject_id'].tolist()
     subId_name = {row['subject_id']:row['subject_name_eng'] for row in Subject_Data.objects.values()}
-    subject_ids_to_pred = selected_values
-    test_set = []
-    for sub in graded_sub:
-      this_sub_grade = df_user.loc[df_user['subject_id'] == sub, 'grade'].iloc[0]
-      test_set.append(['Optional', sub, this_sub_grade])
-    for sub in selected_values:
-      grade = None
-      test_set.append(['Optional', sub, this_sub_grade])
-    print(test_set)
-    predictions = model.test(test_set)
-    pred_ratings = [pred.est for pred in predictions]
-    pred_ratings = [(subject_ids_to_pred[i], pred_ratings[i]) for i in range(len(subject_ids_to_pred))]
-    pred_ratings.sort(key=lambda x: x[1], reverse=True)
+    full_data_set = pd.concat([main_data_set, df_user], axis=0)
+    model = train_rec_model(full_data_set)
+    predictions = prediction_grade_user(model['model'], student_id, selected_values)
     response = []
-    for sub_id, grade in pred_ratings:
-        if sub_id in subId_name:
-            dic = {"subject_id" : sub_id, "sub_name" : subId_name[sub_id], "grade" : round(grade, 2)}
+    for i in predictions:
+        if i['subject_id'] in subId_name:
+            dic = {"subject_id" : i['subject_id'], "sub_name" : subId_name[i['subject_id']], "grade" : round(i['grade'], 2)}
             response.append(dic)
     return response
