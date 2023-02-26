@@ -5,7 +5,7 @@ from unittest.util import safe_repr
 from urllib import response
 from django.views.decorators.csrf import csrf_exempt
 from django.http.response import JsonResponse
-from .models import Student_Data, Student_Grade,Subject_Data, SurpriseModel, CSV_File
+from .models import Student_Data, Student_Grade,Subject_Data, SurpriseModel, CSV_File, CareerModel
 from .serializers import StudentGradeSerializer, StudentSerializer, SubjectSerializer
 from rest_framework.parsers import JSONParser
 from django.db.models import Q
@@ -28,7 +28,10 @@ from surprise import Reader
 from surprise import SVD, accuracy
 from surprise.model_selection import cross_validate
 from surprise.model_selection import train_test_split
+from sklearn.model_selection import GridSearchCV as gd_career
 from surprise.model_selection import GridSearchCV
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn import preprocessing
 import numpy as np
 
 from rest_framework import generics, status, authentication, permissions
@@ -635,6 +638,30 @@ def train_rec_model(df):
   }
   return model
 
+def train_sim_model_career(df):
+  min_rating = 0.00
+  max_rating = 4.00
+  reader = Reader(rating_scale=(min_rating, max_rating))
+  param_grid = {
+        'n_factors': [20, 50, 100],
+        'n_epochs': [5, 10, 20]
+        }
+  data = Dataset.load_from_df(df[['student_id', 'subject_class', 'grade']], reader)
+  svd = SVD(n_epochs=10)
+  gs = GridSearchCV(SVD, param_grid, measures=['rmse', 'mae'], cv=10)
+  gs.fit(data)
+  best_factor = gs.best_params['rmse']['n_factors']
+  best_epoch = gs.best_params['rmse']['n_epochs']
+  trainset, testset = train_test_split(data, test_size=.10, random_state=42)
+  svd = gs.best_estimator["rmse"]
+  svd.fit(trainset)
+  pred_model = svd.test(testset)
+  model = {
+    "rmse" : round(accuracy.rmse(pred_model, verbose=True), 4),
+    "model" : svd
+  }
+  return model
+
 
 @csrf_exempt
 def generate_rec_model(request):
@@ -670,6 +697,118 @@ def prediction_grade_user(model, student_id, selected_values):
   return predict_result
 
 
+def create_data_set_for_career(model, student_id, df, u_sub, job):
+   subject_ids_student = df.loc[df["student_id"] == student_id, "subjectTypes"]
+   subject_ids_to_pred = np.setdiff1d(u_sub, subject_ids_student)
+   df = pd.DataFrame(columns=['student_id', 'subject_class', 'grade', 'career'])
+   for i in subject_ids_to_pred:
+     df1 = pd.DataFrame([{'student_id': student_id, 'subject_class': i, 'grade': str(round(model.predict(str(student_id), str(i)).est, 2)), 'career': job}])
+     df = pd.concat([df, df1])
+   return df
+
+
+def transpost_df(df):
+  lis_of_subClass = list(df['subject_class'].unique())
+  lis_of_student = list(df['student_id'].unique())
+  sub = 0
+  int_class = []
+  for sub in range(len(lis_of_subClass)):
+    if lis_of_subClass[sub] == 'อื่นๆ':
+      pass
+    else:
+      int_class.append(int(lis_of_subClass[sub]))
+  int_class = sorted(int_class)
+  int_class.append('อื่นๆ')
+  lis_of_subClass = int_class
+  col = ['student_id']
+  col = col + lis_of_subClass
+  col.append('job')
+  df_for_job = pd.DataFrame(columns=col)
+  for i in lis_of_student:
+    df_for_id = df[df.student_id == i]
+    mini_row = {'student_id' : i}
+    grade_dic = {}
+    for index, row in df_for_id.iterrows():
+      stu_job = {'job' : row['job']}
+      if row['subjectTypes'] == 'อื่นๆ': 
+        un_int_class = {row['subjectTypes'] : row['grade']}
+      else:  
+        grade = {int(row['subjectTypes']) : row['grade']}
+      grade_dic.update(grade)
+    grade_dic = dict(sorted(grade_dic.items()))
+    grade_dic.update(un_int_class)
+    grade_dic.update(stu_job)
+    mini_row.update(grade_dic)
+    df_for_job = df_for_job.append(mini_row, ignore_index=True)
+  temp_df = df_for_job
+  df_for_job_train = temp_df.dropna()
+  return df_for_job_train
+
+
+
+def train_career_model(df):
+  knn = KNeighborsClassifier()
+  param_grid = {
+    'n_neighbors': [3, 5, 7, 9],
+    'weights': ['uniform', 'distance'],
+    'algorithm': ['ball_tree', 'kd_tree', 'brute']
+  }
+  grid_search = gd_career(knn, param_grid, cv=5)
+  le = preprocessing.LabelEncoder()
+  y = df['career']
+  y = le.fit_transform(y)
+  X = df.drop(columns=['student_id','career'])
+  X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.10, random_state=42)
+  grid_search.fit(X_train, y_train)
+  final_model = KNeighborsClassifier(n_neighbors=grid_search.best_params_['n_neighbors'],
+                                   weights=grid_search.best_params_['weights'],
+                                   algorithm=grid_search.best_params_['algorithm'])
+  final_model.fit(X_train, y_train)
+  accuracy = knn.score(X_test, y_test)
+  model = {
+    "accuracy" : round(accuracy, 2),
+    "model" : final_model
+  }
+  return model
+
+
+
+
+@csrf_exempt
+def create_career_model(request, curriculum = 'วิศวกรรมคอมพิวเตอร์', year = '2562'):
+  if request.method == 'POST':
+    if request.body:
+      body = json.loads(request.body)
+      urri = body['curriculum']
+      year = body['year']
+      pre_avg_data = generate_data_set(curriculum, year)
+      group_query = "select student_id, subject_class, round(avg(grade), 2) as grade, career from pre_avg_data group by subject_class, student_id order by student_id"
+      avg_data = sqldf(group_query)
+      model_career = train_sim_model_career(avg_data)
+      subject_id_uni = avg_data["subjectTypes"].unique().tolist()
+      student_id_uni = avg_data['student_id'].unique().tolist()
+      final_df = pd.DataFrame(columns=['student_id', 'subject_class', 'grade', 'career'])
+      for i in student_id_uni:
+        this_user_job = avg_data.loc[avg_data['student_id'] == i, 'career'].values[0]
+        df_temp = create_data_set_for_career(model_career, i, avg_data, subject_id_uni, this_user_job)
+        final_df = pd.concat([final_df, df_temp])
+      final_df = pd.concat([avg_data, final_df])
+      trans_df = transpost_df(final_df)
+      career_model = train_career_model(trans_df)
+      print(career_model['accuracy'])
+      career_model = CareerModel()
+    else:
+      res = {"message": "pls choose year/curriculum.", "status": status.HTTP_400_BAD_REQUEST}
+  else:
+    res = {"message": "Method not match.", "status": status.HTTP_400_BAD_REQUEST}
+  return JsonResponse("hi", safe=False)
+
+  
+
+
+
+
+
 
 def reqPredictPerUser_Production(df_user, student_id,curriculum, year):    
     df_user = transfromGrade(df_user)
@@ -677,9 +816,9 @@ def reqPredictPerUser_Production(df_user, student_id,curriculum, year):
     selected_values = df_user.query("Want_To_Predict == '?'")['subject_id'].tolist()
     df_user = df_user[df_user.grade != 'Zero']
     subId_name = {row['subject_id']:row['subject_name_eng'] for row in Subject_Data.objects.values()}
-    full_data_set = pd.concat([main_data_set, df_user], axis=0)
-    model = train_rec_model(full_data_set)
-    predictions = prediction_grade_user(model['model'], student_id, selected_values)
+    full_data_set_for_pred_grade = pd.concat([main_data_set, df_user], axis=0)
+    model_grade_pred = train_rec_model(full_data_set_for_pred_grade)
+    predictions = prediction_grade_user(model_grade_pred['model'], student_id, selected_values)
     response = []
     for i in predictions:
         if i['subject_id'] in subId_name:

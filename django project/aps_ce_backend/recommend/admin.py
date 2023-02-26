@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Student_Data, Student_Grade, Rec_User, CSV_File,Subject_Data,SurpriseModel
+from .models import Student_Data, Student_Grade, Rec_User, CSV_File,Subject_Data,SurpriseModel, CareerModel
 # Register your models here.
 
 admin.site.register(Student_Data)
@@ -8,3 +8,4 @@ admin.site.register(Rec_User)
 admin.site.register(CSV_File)
 admin.site.register(Subject_Data)
 admin.site.register(SurpriseModel)
+admin.site.register(CareerModel)
