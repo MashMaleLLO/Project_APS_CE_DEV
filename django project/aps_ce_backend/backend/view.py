@@ -577,7 +577,7 @@ class LoginUser(generics.CreateAPIView):
 
 @csrf_exempt
 def recommendSubject(request):
-    if request.method == 'GET':
+    if request.method == 'POST':
         if request.body:
             subjects = Subject_Data.objects.all()
             subjects = pd.DataFrame(list(subjects.values()))
@@ -610,8 +610,9 @@ def recommendSubject(request):
     return JsonResponse(res, safe=False, json_dumps_params={'ensure_ascii': False})
 
 
+@csrf_exempt
 def keySubject(request):
-    if request.method == 'GET':
+    if request.method == 'POST':
         if request.body:
             subjects = Subject_Data.objects.all()
             subjects = pd.DataFrame(list(subjects.values()))

@@ -63,7 +63,7 @@ const PredictStudent = () => {
                   className="w-full px-4 py-2 bg-white border border-grey-300 rounded-lg focus:bg-grey-200 focus:border-[#FB8500] focus:outline-none"
                 >
                   <option value="computer">วิศวกรรมคอมพิวเตอร์</option>
-                  <option value="computerNext">วิศวกรรมไฟฟ้า</option>
+                  <option value="computerNext">วิศวกรรมคอมพิวเตอร์(ต่อเนื่อง)</option>
                 </select>
               </div>
               <div className="space-y-2 text-base md:text-lg w-full md:w-1/4">
@@ -72,8 +72,8 @@ const PredictStudent = () => {
                   id="select-option"
                   className="w-full px-4 py-2 bg-white border border-grey-300 rounded-lg focus:bg-grey-200 focus:border-[#FB8500] focus:outline-none"
                 >
-                  <option value="computer">ปกติ</option>
-                  <option value="computerNext">ต่อเนื่อง</option>
+                  <option value="computer">2560</option>
+                  <option value="computerNext">2564</option>
                 </select>
               </div>
               <div className=" text-lg md:text-2xl w-full md:w-2/4">

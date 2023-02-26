@@ -85,6 +85,6 @@ urlpatterns = [
     url(r'^signin', LoginUser.as_view(), name='login'),
 
     # UC06
-    url(r'^getrecommendSubject', view.recommendSubject),
-    url(r'^getkeysubject', view.keySubject),
+    url(r'^recommendSubject', view.recommendSubject),
+    url(r'^keysubject', view.keySubject),
 ]
