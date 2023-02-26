@@ -23,56 +23,68 @@ from recommend import views as recc
 urlpatterns = [
     path('admin/', admin.site.urls),
     url(r'^hello$', view.hello),
-    url(r'^fileUpload$', view.csv_upload), ##Api gate way for upload file
+    url(r'^fileUpload$', view.csv_upload),  # Api gate way for upload file
 
-    url(r'^getFile$', recc.file_api), ##Api gate way for upload file
-    url(r'^getFile/(?P<id>\w+)$', recc.file_api), ##Api gate way for upload file
-    url(r'^delFlageFile$', view.csv_delete_handler), ##Api gate way for delete flag files
-    url(r'^recoverFile/(?P<id>\w+)$', view.file_recover), ##Api gate way for recover flag files
+    url(r'^getFile$', recc.file_api),  # Api gate way for upload file
+    # Api gate way for upload file
+    url(r'^getFile/(?P<id>\w+)$', recc.file_api),
+    # Api gate way for delete flag files
+    url(r'^delFlageFile$', view.csv_delete_handler),
+    # Api gate way for recover flag files
+    url(r'^recoverFile/(?P<id>\w+)$', view.file_recover),
 
     # url(r'^downloadCsv',view.csvDownload),
 
-    url(r'^ingest_student_csv',view.student_grade_database_handler), ##Up CSV to student data and grade
+    # Up CSV to student data and grade
+    url(r'^ingest_student_csv', view.student_grade_database_handler),
 
-    url(r'^ingest_subject_csv',view.subject_csv_upload_hander), ##Up CSV to subject
-    
-    url(r'^students_data$',recc.student_data_api), ##Api gate way of student data
-    url(r'^students_data/(?P<id>\w+)$',recc.student_data_api),  ##Api gate way of student data
-    url(r'^students_data/(?P<id>\w+)/(?P<curri>\w+)$',recc.student_data_api),  ##Api gate way of student data
+    url(r'^ingest_subject_csv', view.subject_csv_upload_hander),  # Up CSV to subject
 
-    url(r'^students_grade$',recc.student_grade_api),  ##Api gate way of student grade
-    url(r'^students_grade/(?P<st_id>\w+)$',recc.student_grade_api),  ##Api gate way of student grade
-    url(r'^students_grade/(?P<st_id>\w+)/(?P<su_id>\w+)$',recc.student_grade_api),  ##Api gate way of student grade
+    # Api gate way of student data
+    url(r'^students_data$', recc.student_data_api),
+    # Api gate way of student data
+    url(r'^students_data/(?P<id>\w+)$', recc.student_data_api),
+    url(r'^students_data/(?P<id>\w+)/(?P<curri>\w+)$',
+        recc.student_data_api),  # Api gate way of student data
 
-    url(r'^update_career$',view.update_career),  ##Api gate way of update career
+    # Api gate way of student grade
+    url(r'^students_grade$', recc.student_grade_api),
+    # Api gate way of student grade
+    url(r'^students_grade/(?P<st_id>\w+)$', recc.student_grade_api),
+    url(r'^students_grade/(?P<st_id>\w+)/(?P<su_id>\w+)$',
+        recc.student_grade_api),  # Api gate way of student grade
+
+    # Api gate way of update career
+    url(r'^update_career$', view.update_career),
 
     # url(r'^studentUpdateCareer$',recc.studentUpdateCareer),
     # url(r'^studentUpdateCareer/(?P<id>\w+)$',recc.studentUpdateCareer),
-    url(r'^studentThatHaveJob$',recc.getStudentWithJob),
+    url(r'^studentThatHaveJob$', recc.getStudentWithJob),
 
 
-    url(r'^myModels$',recc.surpriseModel), ### api สร้าง model rec
+    url(r'^myModels$', recc.surpriseModel),  # api สร้าง model rec
 
     url(r'^create_Rec_Model$', recc.generate_rec_model),
 
     url(r'^uploadSubject$', view.nlp_subject_handler),
-    url(r'^subjects$',recc.subjectApi),
-    url(r'^subjects/(?P<id>\w+)$',recc.subjectApi),
+    url(r'^subjects$', recc.subjectApi),
+    url(r'^subjects/(?P<id>\w+)$', recc.subjectApi),
 
-    #UC03
-    url(r'^reqAna$', view.csv_template_generator), ### สร้าง file csv
+    # UC03
+    url(r'^reqAna$', view.csv_template_generator),  # สร้าง file csv
     url(r'^reqPredict', view.gradeUploader),
     url(r'^getPossibleYear', view.getPossibleYear),
 
-    #UC01
+    # UC01
     url(r'^getCareerResult/', view.get_career_result),
 
     # url(r'^getGradResult/(?P<curri>\w+)/(?P<year>\w+)$', view.uc01_getGradResult),
 
     url(r'^register', RegisterUser.as_view(), name='register'),
 
-    url(r'^signin',LoginUser.as_view(), name='login'),
+    url(r'^signin', LoginUser.as_view(), name='login'),
 
-     # UC06
+    # UC06
     url(r'^getrecommendSubject', view.recommendSubject),
+    url(r'^getkeysubject', view.keySubject),
 ]
