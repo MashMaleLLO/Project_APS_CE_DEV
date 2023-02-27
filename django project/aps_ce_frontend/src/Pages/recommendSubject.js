@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react";
 import React from "react";
 import axios from "axios";
+import RecommendedSubjectsList from "./recommendedSubjectsList.js";
 
 const RecommendSubject = () => {
   const [year, setYear] = useState("2564");
+  const [keys, setKeys] = useState([]);
   const [subjects, setSubjects] = useState([]);
   const [selectedSubjects, setSelectedSubjects] = useState([]);
 
@@ -21,6 +23,8 @@ const RecommendSubject = () => {
     }
   };
 
+  const [showSubjects, setShowSubjects] = useState(false);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     const result = await axios.post("http://localhost:8000/recommendSubject", {
@@ -28,6 +32,7 @@ const RecommendSubject = () => {
       year: year,
     });
     setSubjects(result.data);
+    setShowSubjects(true); // show the subjects list
   };
 
   useEffect(() => {
@@ -35,7 +40,7 @@ const RecommendSubject = () => {
       const result = await axios.post("http://localhost:8000/keysubject", {
         year: year,
       });
-      setSubjects(result.data);
+      setKeys(result.data);
     };
     fetchData();
   }, [year]);
@@ -43,6 +48,9 @@ const RecommendSubject = () => {
   return (
     <>
       <h1>แนะนำวิชาเลือกภาค</h1>
+      {showSubjects ? (
+        <RecommendedSubjectsList subjects={subjects} />
+      ) : (
       <form onSubmit={handleSubmit}>
         <label htmlFor="select-faculty">คณะ</label>
         <select
@@ -63,7 +71,7 @@ const RecommendSubject = () => {
           <option value="2564">2564</option>
         </select>
         <div>
-          {subjects.map((subject) => (
+          {keys.map((subject) => (
             <div key={subject}>
               <label>
                 <input
@@ -79,6 +87,7 @@ const RecommendSubject = () => {
         </div>
         <button type="submit">แนะนำวิชาเลือกภาค</button>
       </form>
+      )}
     </>
   );
 };
