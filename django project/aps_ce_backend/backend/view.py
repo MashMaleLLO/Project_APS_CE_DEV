@@ -423,7 +423,6 @@ def get_career_result(request):
                 "Num_of_student": i[2]
             }}
             res.update(d)
-        res = {"message": res, "status": status.HTTP_200_OK}
     else:
         res = {"message": "Method not match.",
                "status": status.HTTP_400_BAD_REQUEST}
@@ -443,10 +442,12 @@ def csv_template_generator(request, curri='วิศวกรรมคอมพ�
             response = HttpResponse(content_type='text/csv')
             response.write(codecs.BOM_UTF8)
             writer = csv.writer(response)
-            writer.writerow(['student_id','subject_id','grade', 'curriculum', 'start_year', 'Want_To_Predict'])
+            writer.writerow(['student_id', 'subject_id', 'grade',
+                            'curriculum', 'start_year', 'Want_To_Predict'])
             for i in subjects:
                 print(i['subject_id'])
-                writer.writerow(['Optional',i['subject_id'],'Your Grade', curri, str(year)])
+                writer.writerow(['Optional', i['subject_id'],
+                                'Your Grade', curri, str(year)])
             response['Content-Disposition'] = 'attachment; filename="csv_file_template.csv"'
             return response
         else:
@@ -462,15 +463,18 @@ def csv_template_generator(request, curri='วิศวกรรมคอมพ�
 
 @csrf_exempt
 def gradeUploader(request):
-    grade_list = ['A','B','C','D','F','S','B+','C+','D+','T(A)','T(B)','T(C)','T(D)','T(F)','T(S)','T(B+)','T(C+)','T(D+)', 'U']
+    grade_list = ['A', 'B', 'C', 'D', 'F', 'S', 'B+', 'C+', 'D+',
+                  'T(A)', 'T(B)', 'T(C)', 'T(D)', 'T(F)', 'T(S)', 'T(B+)', 'T(C+)', 'T(D+)', 'U']
     if request.method == 'POST':
         csv_file = None
         if 'path_to_csv' in request.FILES:
             csv_file = request.FILES['path_to_csv']
             if not csv_file.name.endswith('.csv'):
-                res = {"message":"File format not match pls upload only .csv file", "status" : status.HTTP_400_BAD_REQUEST}
+                res = {"message": "File format not match pls upload only .csv file",
+                       "status": status.HTTP_400_BAD_REQUEST}
                 return JsonResponse(res, safe=False)
-            df = pd.read_csv(csv_file, dtype={0:'string',1:'string', 3:'string', 4:'string', 5:'string'}, encoding='utf-8')
+            df = pd.read_csv(csv_file, dtype={
+                             0: 'string', 1: 'string', 3: 'string', 4: 'string', 5: 'string'}, encoding='utf-8')
             for index, row in df.iterrows():
                 strt = '0'
                 subId = row['subject_id']
@@ -479,23 +483,26 @@ def gradeUploader(request):
                     strt += row['subject_id']
                     subId = strt
                 elif len(subId) < 7 or len(subId) > 8:
-                    return JsonResponse(f'Error subject id not valid at index : {index}',safe=False)
+                    return JsonResponse(f'Error subject id not valid at index : {index}', safe=False)
                 df.at[index, 'subject_id'] = subId
                 if grade == 'Your Grade':
                     df.at[index, 'grade'] = 'Zero'
                 elif grade.upper() not in grade_list:
-                    return JsonResponse(f'Error grade not valid at index : {index}',safe=False)
+                    return JsonResponse(f'Error grade not valid at index : {index}', safe=False)
             this_student_id = df.loc[0, "student_id"]
             this_student_year = df.loc[0, "start_year"]
             this_student_curri = df.loc[0, "curriculum"]
-            response = recc.reqPredictPerUser_Production(df, this_student_id,this_student_curri, this_student_year)
+            response = recc.reqPredictPerUser_Production(
+                df, this_student_id, this_student_curri, this_student_year)
             for i in response:
                 print(i)
             res = {"message": response, "status": status.HTTP_200_OK}
         else:
-            res = {"message":"error can't find any file pls upload again", "status" : status.HTTP_400_BAD_REQUEST}
+            res = {"message": "error can't find any file pls upload again",
+                   "status": status.HTTP_400_BAD_REQUEST}
     else:
-        res = {"message": "Method not match.", "status": status.HTTP_400_BAD_REQUEST}
+        res = {"message": "Method not match.",
+               "status": status.HTTP_400_BAD_REQUEST}
     return JsonResponse(res, safe=False)
 
 
@@ -608,8 +615,6 @@ def recommendSubject(request):
                     "abstract": i[2]
                 }
                 res.append(d)
-            print(res)
-            res = {"message": res, "status": status.HTTP_200_OK}
         else:
             res = {
                 "message": "pls choose file type (year/key).", "status": status.HTTP_400_BAD_REQUEST}
