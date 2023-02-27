@@ -13,6 +13,7 @@ import Navbar from "./Component/navbar";
 import Footer from "./Component/footer";
 import { theme } from "./Component/theme";
 import { ThemeProvider } from "@mui/material/styles";
+import Career from "./Pages/Career/index";
 
 function App() {
   return (
@@ -25,6 +26,7 @@ function App() {
           <Route path="/predictStudent" element={<PredictStudent />} />
           <Route path="/recommendSubject" element={<RecommendSubject />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/Career" element={<Career />} />
 
           <Route
             path="/dataUpload"

@@ -32,7 +32,7 @@ const RecommendedSubjectsList = ({ subjects }) => {
           <button onClick={handleCloseModal}>Close</button>
         </div>
       )}
-      <button onClick={() => navigate(-1)}>Back to RecommendSubject</button>
+      <button onClick={() => navigate(`recommendSubject`)}>Back to RecommendSubject</button>
     </div>
   );
 };
