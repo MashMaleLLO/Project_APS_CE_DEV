@@ -30,6 +30,7 @@ from surprise.model_selection import cross_validate
 from sklearn.model_selection import train_test_split as tt_split
 from surprise.model_selection import train_test_split
 from sklearn.model_selection import GridSearchCV as gd_career
+from sklearn.model_selection import KFold
 from surprise.model_selection import GridSearchCV
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn import preprocessing
@@ -75,9 +76,12 @@ def file_api(request, id=0):
       if this_file == []:
         res = {"message" : f'cant find the file with id {id}', "status" : status.HTTP_400_BAD_REQUEST}
       else:
+        content = this_file[0]['file']
         this_file = pd.DataFrame(this_file)
+        content = cPickle.loads(content)
+        content = content.to_dict('records')
         res = this_file[['id','name', 'upload_date', 'update_date', 'del_flag', 'type_data']].to_dict('records')[0]
-        res = { "message" : res, "status": status.HTTP_200_OK }
+        res = { "message" : {"file_information" : res, "file_content" : content}, "status": status.HTTP_200_OK }
   elif request.method=='DELETE':
     if id == 0:
       res = {"message" : "Pls enter file id" , "status" : status.HTTP_400_BAD_REQUEST}
@@ -695,29 +699,32 @@ def transpost_df(df):
 
 
 def train_career_model(df):
-  # knn = KNeighborsClassifier()
-  # param_grid = {
-  #   'n_neighbors': [3, 5, 7, 9],
-  #   'weights': ['uniform', 'distance'],
-  #   'algorithm': ['ball_tree', 'kd_tree', 'brute']
-  # }
-  # grid_search = gd_career(knn, param_grid, cv=5)
+  knn = KNeighborsClassifier()
+  params = {'n_neighbors': [3, 5, 7], 'weights': ['uniform', 'distance']}
+  kfold = KFold(n_splits=5, shuffle=True, random_state=42)
+  grid_search = gd_career(estimator=knn, param_grid=params, cv=kfold)
   le = preprocessing.LabelEncoder()
   y = df['career']
   y = le.fit_transform(y)
+  print(y)
+  y_ins = le.inverse_transform(y)
+  print(y_ins)
+  encode_dic = {}
+  for i in range(len(y)):
+    dic = {y[i]:y_ins[i]}
+    encode_dic.update(dic)
   X = df.drop(columns=['student_id','career'])
   X_train, X_test, y_train, y_test = tt_split(X, y, test_size=0.1, random_state = 42)
-  # grid_search.fit(X_train, y_train)
-  # final_model = KNeighborsClassifier(n_neighbors=grid_search.best_params_['n_neighbors'],
-  #                                  weights=grid_search.best_params_['weights'],
-  #                                  algorithm=grid_search.best_params_['algorithm'])
-  # print(X_train)
-  final_model = KNeighborsClassifier()
-  final_model.fit(X_train, y_train)
-  accuracy = final_model.score(X_test, y_test)
+  grid_search.fit(X_train, y_train)
+  best_knn = KNeighborsClassifier(n_neighbors=grid_search.best_params_['n_neighbors'], 
+                                 weights=grid_search.best_params_['weights'])
+  best_knn.fit(X_train, y_train)
+  test_score = best_knn.score(X_test, y_test)
+  accuracy = test_score
   model = {
     "accuracy" : round(accuracy, 2),
-    "model" : final_model
+    "model" : best_knn,
+    "encode_dict": encode_dic
   }
   return model
 
@@ -745,8 +752,10 @@ def create_career_model(request, name = 'Model_career', curriculum = 'วิศ�
       final_df = pd.concat([final_df, df_temp])
     final_df = pd.concat([avg_data, final_df])
     trans_df = transpost_df(final_df)
+    trans_df = trans_df[trans_df["career"] != 'Zero']
     career_model = train_career_model(trans_df)
-    career_model = CareerModel(name = name, curriculum = curriculum, accuracy = career_model['accuracy'], career_model = career_model['model'])
+    print(career_model)
+    career_model = CareerModel(name = name, curriculum = curriculum, accuracy = career_model['accuracy'], encode_class = career_model['encode_dict'],career_model = career_model['model'])
     career_model.save()
     res = {"message": f'Complete creating career model name : {name} curriculum : {curriculum}'}
   else:
@@ -765,6 +774,7 @@ def reqPredictPerUser_Production(df_user, student_id = 'Optional', curriculum = 
     all_career_model = list(CareerModel.objects.filter(curriculum = curriculum).values()) ##
     all_career_model = all_career_model[-1] ##
     career_model = all_career_model['career_model']  ##
+    encode_class = all_career_model['encode_class'] ##
     df_user = transfromGrade(df_user)
     main_data_set = generate_data_set(curriculum, year)
     selected_values = df_user.query("Want_To_Predict == '?'")['subject_id'].tolist()
@@ -787,7 +797,7 @@ def reqPredictPerUser_Production(df_user, student_id = 'Optional', curriculum = 
     df_user_full_grade = transpost_df(df_user_full_grade) ##
     df_user_career_for_test = df_user_full_grade ##
     df_user_career_for_test = df_user_career_for_test.drop(columns=['student_id','career']) ##
-    this_user_career = career_model.predict(df_user_career_for_test) ##
+    this_user_career = encode_class[int(career_model.predict(df_user_career_for_test)[0])] ##
     subId_name = {row['subject_id']:row['subject_name_eng'] for row in Subject_Data.objects.values()}
     full_data_set_for_pred_grade = pd.concat([main_data_set, df_user], axis=0)
     model_grade_pred = train_rec_model(full_data_set_for_pred_grade)
@@ -797,5 +807,5 @@ def reqPredictPerUser_Production(df_user, student_id = 'Optional', curriculum = 
         if i['subject_id'] in subId_name:
             dic = {"subject_id" : i['subject_id'], "sub_name" : subId_name[i['subject_id']], "grade" : round(i['grade'], 2)}
             response_grade.append(dic)
-    response_grade.append(str(this_user_career[0]))
+    response_grade.append(str(this_user_career))
     return response_grade

@@ -53,6 +53,7 @@ class CareerModel(models.Model):
       create_date = models.DateTimeField(default=datetime.now(pytz.timezone('Asia/Bangkok')))
       update_date = models.DateTimeField(default=datetime.now(pytz.timezone('Asia/Bangkok')))
       del_flag = models.CharField(max_length=10, default=0)
+      encode_class = PickledObjectField(default='Zero')
       career_model = PickledObjectField(default='Zero')
 
       def save(self, *args, **kwargs):

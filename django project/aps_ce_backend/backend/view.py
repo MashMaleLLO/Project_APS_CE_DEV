@@ -155,11 +155,14 @@ def subject_csv_upload_hander(request, csv_id=0):
 
 
 @csrf_exempt
-def csv_upload(request, id=0, type_data='ไม่ระบุ'):
+def csv_upload(request, id=0, type_data='แบบสอบถามการมีงานทำ'):
     if request.method == 'POST':
         if request.body:
-            file_info = json.loads(request.body)
-            type_data = file_info['type_data']
+            try:
+                file_info = json.loads(request.body)
+                type_data = file_info['type_data']
+            except:
+                pass
             print(type_data)
         csv_file = None
         if 'path_to_csv' in request.FILES:
