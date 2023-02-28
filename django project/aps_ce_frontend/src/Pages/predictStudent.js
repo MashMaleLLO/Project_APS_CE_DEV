@@ -16,7 +16,7 @@ const PredictStudent = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log(e.target.model.value);
+    // console.log(e.target.model.value);
     async function fetchData() {
       let res = await axios.post("http://localhost:8000/reqPredict", formData);
       console.log(res.data);

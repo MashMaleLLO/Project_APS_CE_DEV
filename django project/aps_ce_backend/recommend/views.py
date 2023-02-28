@@ -682,7 +682,7 @@ def transpost_df(df):
         un_int_class = {row['subject_class'] : row['grade']}
       else:  
         grade = {int(row['subject_class']) : row['grade']}
-      grade_dic.update(grade)
+        grade_dic.update(grade)
     grade_dic = dict(sorted(grade_dic.items()))
     grade_dic.update(un_int_class)
     grade_dic.update(stu_job)
@@ -733,7 +733,6 @@ def create_career_model(request, name = 'Model_career', curriculum = 'วิศ�
       curriculum = body['curriculum']
       year = body['year']
     pre_avg_data = generate_data_set(curriculum, year)
-    print(pre_avg_data)
     group_query = "select student_id, subject_class, round(avg(grade), 2) as grade, career from pre_avg_data group by subject_class, student_id order by student_id"
     avg_data = sqldf(group_query)
     model_career = train_sim_model_career(avg_data)
@@ -747,7 +746,6 @@ def create_career_model(request, name = 'Model_career', curriculum = 'วิศ�
     final_df = pd.concat([avg_data, final_df])
     trans_df = transpost_df(final_df)
     career_model = train_career_model(trans_df)
-    print(career_model['accuracy'])
     career_model = CareerModel(name = name, curriculum = curriculum, accuracy = career_model['accuracy'], career_model = career_model['model'])
     career_model.save()
     res = {"message": f'Complete creating career model name : {name} curriculum : {curriculum}'}
@@ -764,35 +762,40 @@ def reqPredictPerUser_Production(df_user, student_id = 'Optional', curriculum = 
     curri_year = str(curri_year)
     sub_data = list(Subject_Data.objects.filter(year = curri_year).values())
     sub_data_df = pd.DataFrame(sub_data)
-    all_career_model = list(CareerModel.objects.filter(curriculum = curriculum).values())
-    all_career_model = all_career_model[-1]
-    career_model = all_career_model['career_model']
+    all_career_model = list(CareerModel.objects.filter(curriculum = curriculum).values()) ##
+    all_career_model = all_career_model[-1] ##
+    career_model = all_career_model['career_model']  ##
     df_user = transfromGrade(df_user)
     main_data_set = generate_data_set(curriculum, year)
     selected_values = df_user.query("Want_To_Predict == '?'")['subject_id'].tolist()
     df_user = df_user[df_user.grade != 'Zero']
-    df_user_career = df_user
-    df_user_career['career'] = np.nan
-    df_user_career['career'] = df_user_career['career'].fillna('Zero')
-    q_join_user_subclass = 'select df_user_career.student_id, sub_data_df.subject_class, round(avg(df_user_career.grade), 2) as grade, df_user_career.career from df_user_career left join sub_data_df on df_user_career.subject_id = sub_data_df.subject_id group by subject_class'
-    df_user_career = sqldf(q_join_user_subclass)
-    df_user_career['subject_class'] = df_user_career['subject_class'].fillna('อื่นๆ')
-    group_query = "select student_id, subject_class, round(avg(grade), 2) as grade, career from main_data_set group by subject_class, student_id order by student_id"
-    avg_data = sqldf(group_query)
-    df_con_user_data_set = pd.concat([avg_data, df_user_career])
-    model_career_sim = train_sim_model_career(df_con_user_data_set)
-    df_filtered_user = df_con_user_data_set[df_con_user_data_set['student_id'] == 'Optional']
-    subject_id_uni = df_filtered_user["subject_class"].unique().tolist()
-    this_user_job = df_filtered_user.loc[df_filtered_user['student_id'] == student_id, 'career'].values[0]
-    df_user_full_grade = create_data_set_for_career(model_career_sim['model'], student_id, df_filtered_user, subject_id_uni, this_user_job)
-    print(df_user_full_grade)
-    # subId_name = {row['subject_id']:row['subject_name_eng'] for row in Subject_Data.objects.values()}
-    # full_data_set_for_pred_grade = pd.concat([main_data_set, df_user], axis=0)
-    # model_grade_pred = train_rec_model(full_data_set_for_pred_grade)
-    # predictions = prediction_grade_user(model_grade_pred['model'], student_id, selected_values)
-    # response_grade = []
-    # for i in predictions:
-    #     if i['subject_id'] in subId_name:
-    #         dic = {"subject_id" : i['subject_id'], "sub_name" : subId_name[i['subject_id']], "grade" : round(i['grade'], 2)}
-    #         response_grade.append(dic)
-    return 'Hi'
+    df_user_career = df_user ##
+    df_user_career['career'] = np.nan ##
+    df_user_career['career'] = df_user_career['career'].fillna('Zero') ##
+    q_join_user_subclass = 'select df_user_career.student_id, sub_data_df.subject_class, round(avg(df_user_career.grade), 2) as grade, df_user_career.career from df_user_career left join sub_data_df on df_user_career.subject_id = sub_data_df.subject_id group by subject_class' ##
+    df_user_career = sqldf(q_join_user_subclass) ##
+    df_user_career['subject_class'] = df_user_career['subject_class'].fillna('อื่นๆ') ##
+    group_query = "select student_id, subject_class, round(avg(grade), 2) as grade, career from main_data_set group by subject_class, student_id order by student_id" ##
+    avg_data = sqldf(group_query) ##
+    df_con_user_data_set = pd.concat([avg_data, df_user_career]) ##
+    model_career_sim = train_sim_model_career(df_con_user_data_set) ##
+    df_filtered_user = df_con_user_data_set[df_con_user_data_set['student_id'] == 'Optional'] ##
+    subject_id_uni = df_con_user_data_set["subject_class"].unique().tolist() ##
+    this_user_job = df_filtered_user.loc[df_filtered_user['student_id'] == student_id, 'career'].values[0] ##
+    df_user_full_grade = create_data_set_for_career(model_career_sim['model'], student_id, df_con_user_data_set, subject_id_uni, this_user_job) ##
+    df_user_full_grade = pd.concat([df_filtered_user, df_user_full_grade]) ##
+    df_user_full_grade = transpost_df(df_user_full_grade) ##
+    df_user_career_for_test = df_user_full_grade ##
+    df_user_career_for_test = df_user_career_for_test.drop(columns=['student_id','career']) ##
+    this_user_career = career_model.predict(df_user_career_for_test) ##
+    subId_name = {row['subject_id']:row['subject_name_eng'] for row in Subject_Data.objects.values()}
+    full_data_set_for_pred_grade = pd.concat([main_data_set, df_user], axis=0)
+    model_grade_pred = train_rec_model(full_data_set_for_pred_grade)
+    predictions = prediction_grade_user(model_grade_pred['model'], student_id, selected_values)
+    response_grade = []
+    for i in predictions:
+        if i['subject_id'] in subId_name:
+            dic = {"subject_id" : i['subject_id'], "sub_name" : subId_name[i['subject_id']], "grade" : round(i['grade'], 2)}
+            response_grade.append(dic)
+    response_grade.append(str(this_user_career[0]))
+    return response_grade
