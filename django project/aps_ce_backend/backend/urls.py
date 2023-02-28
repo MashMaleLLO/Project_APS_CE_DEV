@@ -66,6 +66,8 @@ urlpatterns = [
 
     url(r'^create_Rec_Model$', recc.generate_rec_model),
 
+    url(r'^create_Career_Model$', recc.create_career_model),
+
     url(r'^uploadSubject$', view.nlp_subject_handler),
     url(r'^subjects$', recc.subjectApi),
     url(r'^subjects/(?P<id>\w+)$', recc.subjectApi),
