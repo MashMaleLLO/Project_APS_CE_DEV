@@ -1,11 +1,20 @@
 import React, { useState } from "react";
 import axios from "axios";
-import ModelList from "./modelList";
-import YearList from "./listPossibleYear";
 
 const PredictStudent = () => {
   let formData = new FormData();
   const [csvFile, setCsvFile] = useState();
+  const [year, setYear] = useState("2560");
+  const [curriculum, setCurriculum] = useState("วิศวกรรมคอมพิวเตอร์");
+
+  const handleYearChange = (e) => {
+    setYear(e.target.value);
+  };
+
+  const handleCurriculum = (e) => {
+    setCurriculum(e.target.value);
+  };
+
   if (csvFile) {
     formData.append("path_to_csv", csvFile);
   }
@@ -21,30 +30,28 @@ const PredictStudent = () => {
       let res = await axios.post("http://localhost:8000/reqPredict", formData);
       console.log(res.data);
     }
-
     fetchData();
   };
 
   const getDownloadFile = (e) => {
     e.preventDefault();
     async function getfile() {
-      let res = await axios({
-        url:
-          "http://localhost:8000/reqAna/" +
-          e.target.curri.value +
-          "/" +
-          e.target.year.value, //your url
-        method: "GET",
-        responseType: "blob", // important
-      }).then((response) => {
-        const url = window.URL.createObjectURL(new Blob([response.data]));
-        const link = document.createElement("a");
-        link.href = url;
-        link.setAttribute("download", "2560fileformat.csv"); //or any other extension
-        document.body.appendChild(link);
-        link.click();
-      });
+      let res = await axios
+        .post("http://localhost:8000/reqAna", {
+          curriculum: curriculum,
+          year: year,
+          responseType: "blob",
+        })
+        .then((response) => {
+          const url = window.URL.createObjectURL(new Blob([response.data]));
+          const link = document.createElement("a");
+          link.href = url;
+          link.setAttribute("download", "2560fileformat.csv"); //or any other extension
+          document.body.appendChild(link);
+          link.click();
+        });
     }
+    console.log(curriculum);
     getfile();
   };
 
@@ -59,21 +66,30 @@ const PredictStudent = () => {
                 {/* เเถวที่ 1 : Dropdown*/}
                 <label htmlFor="select-option">คณะ</label>
                 <select
-                  id="select-option"
+                  id="select-year"
                   className="w-full px-4 py-2 bg-white border border-grey-300 rounded-lg focus:bg-grey-200 focus:border-[#FB8500] focus:outline-none"
+                  onChange={handleCurriculum}
+                  value={curriculum}
                 >
-                  <option value="computer">วิศวกรรมคอมพิวเตอร์</option>
-                  <option value="computerNext">วิศวกรรมคอมพิวเตอร์(ต่อเนื่อง)</option>
+                  <option value="วิศวกรรมคอมพิวเตอร์">วิศวกรรมคอมพิวเตอร์</option>
+                  <option value="วิศวกรรมคอมพิวเตอร์(ต่อเนื่อง)">
+                    วิศวกรรมคอมพิวเตอร์(ต่อเนื่อง)
+                  </option>
                 </select>
               </div>
               <div className="space-y-2 text-base md:text-lg w-full md:w-1/4">
                 <label htmlFor="select-option">หลักสูตร</label>
                 <select
-                  id="select-option"
+                  id="select-year"
                   className="w-full px-4 py-2 bg-white border border-grey-300 rounded-lg focus:bg-grey-200 focus:border-[#FB8500] focus:outline-none"
+                  onChange={handleYearChange}
+                  value={year}
                 >
-                  <option value="computer">2560</option>
-                  <option value="computerNext">2564</option>
+                  <option value="2560">2560</option>
+                  <option value="2561">2561</option>
+                  <option value="2562">2562</option>
+                  <option value="2563">2563</option>
+                  <option value="2564">2564</option>
                 </select>
               </div>
               <div className=" text-lg md:text-2xl w-full md:w-2/4">

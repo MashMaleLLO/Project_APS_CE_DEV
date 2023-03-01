@@ -23,7 +23,7 @@ const StaticCareer = () => {
   };
 
   const filteredData = jobData.filter((item, index) => {
-    return selectedYear ? item.Year === selectedYear : true;
+    return selectedYear ? "Year" === selectedYear : true;
   });
 
   console.log("labels:", labels);
@@ -36,8 +36,7 @@ const StaticCareer = () => {
     datasets: [
       {
         label: "สายงาน",
-        //data: jobData.map((item) => item.Num_of_student),
-        data: filteredData.map((item) => item.Num_of_student),
+        data: filteredData.map((item) => "Num_of_student"),
         backgroundColor: ["#FFD670"],
       },
     ],

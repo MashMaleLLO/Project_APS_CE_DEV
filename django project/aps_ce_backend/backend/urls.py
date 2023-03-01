@@ -73,7 +73,7 @@ urlpatterns = [
     url(r'^subjects/(?P<id>\w+)$', recc.subjectApi),
 
     # UC03
-    url(r'^reqAna$', view.csv_template_generator),  # สร้าง file csv
+    url(r'^reqAna', view.csv_template_generator),  # สร้าง file csv
     url(r'^reqPredict', view.gradeUploader),
     url(r'^getPossibleYear', view.getPossibleYear),
 
