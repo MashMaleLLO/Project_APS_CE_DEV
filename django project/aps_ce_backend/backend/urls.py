@@ -72,11 +72,12 @@ urlpatterns = [
     url(r'^subjects$', recc.subjectApi),
     url(r'^subjects/(?P<id>\w+)$', recc.subjectApi),
 
+    url(r'^req_pred_many', recc.reqPredict_career_manyUser),
+
     # UC03
     url(r'^reqAna', view.csv_template_generator),  # สร้าง file csv
     url(r'^reqPredict', view.gradeUploader),
     url(r'^getPossibleYear', view.getPossibleYear),
-
     # UC01
     url(r'^getCareerResult/', view.get_career_result),
 

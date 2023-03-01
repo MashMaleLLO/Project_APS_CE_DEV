@@ -492,7 +492,7 @@ def numerical_to_alphabetical_grade(grade):
 @csrf_exempt
 def gradeUploader(request):
     grade_list = ['A', 'B', 'C', 'D', 'F', 'S', 'B+', 'C+', 'D+',
-                  'T(A)', 'T(B)', 'T(C)', 'T(D)', 'T(F)', 'T(S)', 'T(B+)', 'T(C+)', 'T(D+)', 'U']
+                  'T(A)', 'T(B)', 'T(C)', 'T(D)', 'T(F)', 'T(S)', 'T(B+)', 'T(C+)', 'T(D+)', 'U', 'I']
     if request.method == 'POST':
         csv_file = None
         if 'path_to_csv' in request.FILES:

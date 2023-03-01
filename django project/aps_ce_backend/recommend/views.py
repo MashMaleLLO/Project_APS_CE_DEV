@@ -523,6 +523,7 @@ def transfromGrade(df):
       "F": 0.00,
       "T(F)": 0.00,
       "U": 0.00,
+      "I": 0.00,
   }
   df["grade"] = df["grade"].replace(grade_map)
   return df
@@ -609,12 +610,6 @@ def train_sim_model_career(df):
   return model
 
 
-@csrf_exempt
-def generate_rec_model(request):
-  res = {"message": "Method not match.", "status": status.HTTP_400_BAD_REQUEST}
-  return JsonResponse(res , safe=False, json_dumps_params={'ensure_ascii': False})
-
-
 def generate_data_set(curriculum, year):
   curri_year = int(year)
   while curri_year % 4 != 0:
@@ -632,8 +627,6 @@ def generate_data_set(curriculum, year):
   train_data['subject_class'] = train_data['subject_class'].fillna('อื่นๆ')
   train_data = transfromGrade(train_data)
   return train_data
-
-
 
 
 def prediction_grade_user(model, student_id, selected_values):
@@ -654,7 +647,7 @@ def create_data_set_for_career(model, student_id, df, u_sub, job):
    print(subject_ids_to_pred)
    df = pd.DataFrame(columns=['student_id', 'subject_class', 'grade', 'career'])
    for i in subject_ids_to_pred:
-     df1 = pd.DataFrame([{'student_id': student_id, 'subject_class': i, 'grade': str(round(model.predict(str(student_id), str(i)).est, 2)), 'career': job}])
+     df1 = pd.DataFrame([{'student_id': student_id, 'subject_class': i, 'grade': round(model.predict(str(student_id), str(i)).est, 2), 'career': job}])
      df = pd.concat([df, df1])
    return df
 
@@ -740,6 +733,7 @@ def create_career_model(request, name = 'Model_career', curriculum = 'วิศ�
       curriculum = body['curriculum']
       year = body['year']
     pre_avg_data = generate_data_set(curriculum, year)
+    this_model_curri_year = pre_avg_data.loc[0, "curriculum_year"]
     group_query = "select student_id, subject_class, round(avg(grade), 2) as grade, career from pre_avg_data group by subject_class, student_id order by student_id"
     avg_data = sqldf(group_query)
     model_career = train_sim_model_career(avg_data)
@@ -753,9 +747,13 @@ def create_career_model(request, name = 'Model_career', curriculum = 'วิศ�
     final_df = pd.concat([avg_data, final_df])
     trans_df = transpost_df(final_df)
     trans_df = trans_df[trans_df["career"] != 'Zero']
-    career_model = train_career_model(trans_df)
+    try:
+      career_model = train_career_model(trans_df)
+    except:
+      res = {"message" : "Error in model training process", "status" : status.HTTP_400_BAD_REQUEST}
+      return JsonResponse(res, safe=False)
     print(career_model)
-    career_model = CareerModel(name = name, curriculum = curriculum, accuracy = career_model['accuracy'], encode_class = career_model['encode_dict'],career_model = career_model['model'])
+    career_model = CareerModel(name = name, curriculum = curriculum, year = this_model_curri_year, accuracy = career_model['accuracy'], encode_class = career_model['encode_dict'],career_model = career_model['model'])
     career_model.save()
     res = {"message": f'Complete creating career model name : {name} curriculum : {curriculum}'}
   else:
@@ -811,27 +809,99 @@ def reqPredictPerUser_Production(df_user, student_id = 'Optional', curriculum = 
     return response_grade
 
 @csrf_exempt
-def generateRecModel_manyUser(request, curriculum = 'วิศวกรรมคอมพิวเตอร์', curri_year = '2560'):
+def generateRecModel_manyUser(request, name = 'Default', curriculum = 'วิศวกรรมคอมพิวเตอร์', curri_year = '2560'):
   if request.method == 'POST':
     if request.body:
       try:
         body = json.loads(request.body)
         curriculum = body['curriculum']
         curri_year = body['curri_year']
+        name = body['name']
       except:
         pass
     student_data = pd.DataFrame(list(Student_Data.objects.all().values()))
     student_grade = pd.DataFrame(list(Student_Grade.objects.all().values()))
     student_grade = student_grade[student_grade['grade'] != 'Zero']
     student_grade = transfromGrade(student_grade)
-    subject_data = pd.DataFrame(list(Subject_Data.objects.all().values()))
-    q_join_grade = "select student_grade.student_id, student_grade.subject_id, student_data.curriculum, student_data.curriculum_year from student_grade left join student_data on student_grade.student_id = student_data.student_id"
+    subject_data = pd.DataFrame(list(Subject_Data.objects.filter(year = curri_year).values()))
+    q_join_grade = "select student_grade.student_id, student_grade.subject_id, student_grade.grade, student_data.curriculum, student_data.curriculum_year, student_data.career from student_grade left join student_data on student_grade.student_id = student_data.student_id"
     dataset = sqldf(q_join_grade)
-    q_join_subject = "select dataset.student_id, subject_data.subject_class, dataset.curriculum, dataset.curriculum_year from dataset left join subject_data on dataset.subject_id = subject_data.subject_id"
+    dataset = dataset.loc[(dataset['curriculum'] == curriculum) & (dataset['curriculum_year'] == curri_year)]
+    q_join_subject = "select dataset.student_id, subject_data.subject_class, dataset.grade, dataset.curriculum, dataset.curriculum_year, dataset.career from dataset left join subject_data on dataset.subject_id = subject_data.subject_id"
     dataset = sqldf(q_join_subject)
-    # dataset = dataset.loc[dataset['grade'] != 'Zero']
-    print(dataset['grade'].unique())
+    dataset = dataset[dataset['grade'] != 'nan']
+    q_avg = "select dataset.student_id, dataset.subject_class, round(avg(dataset.grade),2) as grade, dataset.curriculum, dataset.curriculum_year, dataset.career from dataset group by dataset.subject_class, dataset.student_id"
+    dataset = sqldf(q_avg)
+    print(dataset['subject_class'].unique())
+    dataset['subject_class'] = dataset['subject_class'].fillna('อื่นๆ')
+    dataset = dataset[['student_id', 'subject_class', 'grade']]
+    try:
+      model_fill_grade = train_sim_model_career(dataset)
+    except:
+      res = {"message" : "Error in model training process", "status" : status.HTTP_400_BAD_REQUEST}
+      return JsonResponse(res, safe=False)
+    model_fill_grade = SurpriseModel(name = name, curriculum = curriculum, year = curri_year, rmse = model_fill_grade['rmse'], type_pred = 'Subject_Class', rec_model = model_fill_grade['model'])
+    model_fill_grade.save()
+    res = {"message" : f'Complete creating recomm model name : {name} | curriculum : {curriculum} | curri_year : {curri_year}'}
   else:
     res = {"message": "Method not match.", "status": status.HTTP_400_BAD_REQUEST}
-  return JsonResponse("Hi", safe=False)
+  return JsonResponse(res, safe=False, json_dumps_params={'ensure_ascii': False})
+
+@csrf_exempt
+def reqPredict_career_manyUser(request, curriculum = 'วิศวกรรมคอมพิวเตอร์', start_year = '2562'):
+  if request.method == 'POST':
+    if request.body:
+      try:
+        body = json.loads(request.body)
+        curriculum = body['curriculum']
+        start_year = body['year']
+      except:
+        pass
+    curri_year = int(start_year)
+    while curri_year % 4 != 0:
+      curri_year = curri_year - 1
+    curri_year = str(curri_year)
+    model_rec = list(SurpriseModel.objects.filter(curriculum = curriculum, year = curri_year).values())[-1]
+    model_career = list(CareerModel.objects.filter(curriculum = curriculum, year = curri_year).values())[-1]
+    encode_class = model_career['encode_class']
+    career_model = model_career['career_model']
+    student_data = pd.DataFrame(list(Student_Data.objects.all().values()))
+    student_grade = pd.DataFrame(list(Student_Grade.objects.all().values()))
+    subject_data = pd.DataFrame(list(Subject_Data.objects.filter(year = curri_year).values()))
+    student_grade = transfromGrade(student_grade)
+    q_join_grade = "select student_grade.student_id, student_grade.subject_id, student_grade.grade, student_data.curriculum, student_data.curriculum_year, student_data.start_year, student_data.career from student_grade left join student_data on student_grade.student_id = student_data.student_id"
+    dataset = sqldf(q_join_grade)
+    q_join_subject = "select dataset.student_id, subject_data.subject_class, dataset.grade, dataset.curriculum, dataset.curriculum_year, dataset.start_year, dataset.career from dataset left join subject_data on dataset.subject_id = subject_data.subject_id"
+    dataset = sqldf(q_join_subject)
+    dataset = dataset[dataset['grade'] != 'nan']
+    q_avg = "select dataset.student_id, dataset.subject_class, round(avg(dataset.grade),2) as grade, dataset.curriculum, dataset.curriculum_year, dataset.start_year, dataset.career from dataset group by dataset.subject_class, dataset.student_id"
+    dataset = sqldf(q_avg)
+    dataset['subject_class'] = dataset['subject_class'].fillna('อื่นๆ')
+    dataset = dataset.loc[(dataset['curriculum'] == curriculum) & (dataset['curriculum_year'] == curri_year)]
+    all_user_by_year = dataset.loc[(dataset['curriculum'] == curriculum) & (dataset['start_year'] == start_year)]
+    all_user_by_year = all_user_by_year[['student_id', 'subject_class', 'grade', 'career']]
+    student_id_year_uni = all_user_by_year['student_id'].unique().tolist()
+    subject_uni = dataset['subject_class'].unique().tolist()
+    predict_career_dataset = pd.DataFrame(columns=['student_id', 'subject_class', 'grade'])
+    print(all_user_by_year)
+    for i in student_id_year_uni:
+      df_temp = create_data_set_for_career(model_rec['rec_model'], i, dataset, subject_uni, 'Zero')
+      predict_career_dataset = pd.concat([predict_career_dataset, df_temp])
+    predict_career_dataset = pd.concat([all_user_by_year, predict_career_dataset])
+    transpost_grade = transpost_df(predict_career_dataset)
+    transpost_grade = transpost_grade.drop(columns=['student_id','career'])
+    pred_result = career_model.predict(transpost_grade)
+    response = {}
+    for j in pred_result:
+      lis_key = list(response.keys())
+      if encode_class[int(j)] in lis_key:
+        response[encode_class[int(j)]] += 1
+      else:
+        dic = {encode_class[int(j)]:1}
+        response.update(dic)
+    res = {"message" : response, "status" : status.HTTP_200_OK}
+  else:
+    res = {"message": "Method not match.", "status": status.HTTP_400_BAD_REQUEST}
+  return JsonResponse(res, safe=False, json_dumps_params={'ensure_ascii': False})
+
 

@@ -35,6 +35,7 @@ class Subject_Data(models.Model):
 class SurpriseModel(models.Model):
       name = models.CharField(max_length=300, default='rec_model')
       curriculum = models.CharField(max_length=100, default='Zero')
+      year = models.CharField(max_length=100, default='Zero')
       rmse = models.CharField(max_length=100, default='Zero')
       create_date = models.DateTimeField(default=datetime.now(pytz.timezone('Asia/Bangkok')))
       update_date = models.DateTimeField(default=datetime.now(pytz.timezone('Asia/Bangkok')))
@@ -49,6 +50,7 @@ class SurpriseModel(models.Model):
 class CareerModel(models.Model):
       name = models.CharField(max_length=300, default='rec_model')
       curriculum = models.CharField(max_length=100, default='Zero')
+      year = models.CharField(max_length=100, default='Zero')
       accuracy = models.CharField(max_length=100, default='Zero')
       create_date = models.DateTimeField(default=datetime.now(pytz.timezone('Asia/Bangkok')))
       update_date = models.DateTimeField(default=datetime.now(pytz.timezone('Asia/Bangkok')))
