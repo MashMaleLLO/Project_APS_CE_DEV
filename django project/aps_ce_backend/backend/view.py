@@ -464,6 +464,27 @@ def csv_template_generator(request, curri='วิศวกรรมคอมพ�
     ##### UC05######
 
 
+def numerical_to_alphabetical_grade(grade):
+    if grade == 4:
+        return 'A'
+    elif grade >= 3.5:
+        return 'B+'
+    elif grade >= 3:
+        return 'B'
+    elif grade >= 2.5:
+        return 'C+'
+    elif grade >= 2:
+        return 'C'
+    elif grade >= 1.5:
+        return 'D+'
+    elif grade >= 1:
+        return 'D'
+    elif grade >= 0:
+        return 'F'
+    else:
+        return 'Invalid grade'
+
+
 @csrf_exempt
 def gradeUploader(request):
     grade_list = ['A', 'B', 'C', 'D', 'F', 'S', 'B+', 'C+', 'D+',
@@ -497,8 +518,11 @@ def gradeUploader(request):
             this_student_curri = df.loc[0, "curriculum"]
             response = recc.reqPredictPerUser_Production(
                 df, this_student_id, this_student_curri, this_student_year)
-            for i in response:
-                print(i)
+            for i in range(len(response) - 1):
+                this_grade = numerical_to_alphabetical_grade(response[i]['grade'])
+                response[i]['grade'] = this_grade
+                print(response[i])
+            print(response[-1])
             res = {"message": response, "status": status.HTTP_200_OK}
         else:
             res = {"message": "error can't find any file pls upload again",
