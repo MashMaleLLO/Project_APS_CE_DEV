@@ -809,3 +809,29 @@ def reqPredictPerUser_Production(df_user, student_id = 'Optional', curriculum = 
             response_grade.append(dic)
     response_grade.append(str(this_user_career))
     return response_grade
+
+@csrf_exempt
+def generateRecModel_manyUser(request, curriculum = 'วิศวกรรมคอมพิวเตอร์', curri_year = '2560'):
+  if request.method == 'POST':
+    if request.body:
+      try:
+        body = json.loads(request.body)
+        curriculum = body['curriculum']
+        curri_year = body['curri_year']
+      except:
+        pass
+    student_data = pd.DataFrame(list(Student_Data.objects.all().values()))
+    student_grade = pd.DataFrame(list(Student_Grade.objects.all().values()))
+    student_grade = student_grade[student_grade['grade'] != 'Zero']
+    student_grade = transfromGrade(student_grade)
+    subject_data = pd.DataFrame(list(Subject_Data.objects.all().values()))
+    q_join_grade = "select student_grade.student_id, student_grade.subject_id, student_data.curriculum, student_data.curriculum_year from student_grade left join student_data on student_grade.student_id = student_data.student_id"
+    dataset = sqldf(q_join_grade)
+    q_join_subject = "select dataset.student_id, subject_data.subject_class, dataset.curriculum, dataset.curriculum_year from dataset left join subject_data on dataset.subject_id = subject_data.subject_id"
+    dataset = sqldf(q_join_subject)
+    # dataset = dataset.loc[dataset['grade'] != 'Zero']
+    print(dataset['grade'].unique())
+  else:
+    res = {"message": "Method not match.", "status": status.HTTP_400_BAD_REQUEST}
+  return JsonResponse("Hi", safe=False)
+

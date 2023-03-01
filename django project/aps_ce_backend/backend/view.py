@@ -441,16 +441,20 @@ def csv_template_generator(request, curri='วิศวกรรมคอมพ�
             body = json.loads(request.body)
             curri = body['curriculum']
             year = body['year']
-            subjects = list(Subject_Data.objects.filter(year=year).values())
+            curri_year = int(year)
+            while curri_year % 4 != 0:
+                curri_year = curri_year - 1
+            curri_year = str(curri_year)
+            subjects = list(Subject_Data.objects.filter(year=curri_year).values())
             response = HttpResponse(content_type='text/csv')
             response.write(codecs.BOM_UTF8)
             writer = csv.writer(response)
             writer.writerow(['student_id', 'subject_id', 'grade',
-                            'curriculum', 'start_year', 'Want_To_Predict'])
+                            'start_year', 'curriculum', 'Want_To_Predict'])
             for i in subjects:
                 print(i['subject_id'])
                 writer.writerow(['Optional', i['subject_id'],
-                                'Your Grade', curri, str(year)])
+                                'Your Grade', str(year), curri])
             response['Content-Disposition'] = 'attachment; filename="csv_file_template.csv"'
             return response
         else:

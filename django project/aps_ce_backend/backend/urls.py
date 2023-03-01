@@ -64,7 +64,7 @@ urlpatterns = [
 
     url(r'^myModels$', recc.surpriseModel),  # api สร้าง model rec
 
-    url(r'^create_Rec_Model$', recc.generate_rec_model),
+    url(r'^create_Rec_Model$', recc.generateRecModel_manyUser),
 
     url(r'^create_Career_Model$', recc.create_career_model),
 
