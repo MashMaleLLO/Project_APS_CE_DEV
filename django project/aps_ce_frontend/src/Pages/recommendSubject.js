@@ -47,11 +47,11 @@ const RecommendSubject = () => {
 
   return (
     <>
-      <h1>แนะนำวิชาเลือกภาค</h1>
       {showSubjects ? (
         <RecommendedSubjectsList subjects={subjects} />
-      ) : (
+      ) : (  
       <form onSubmit={handleSubmit}>
+        <h1>แนะนำวิชาเลือกภาค</h1>
         <label htmlFor="select-faculty">คณะ</label>
         <select
           id="select-faculty"

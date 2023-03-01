@@ -1,15 +1,17 @@
 import React, { useState, useEffect } from "react";
 import BarChart from "../../components/BarChart";
 import axios from 'axios';
+import { MockData } from "../../components/MockData";
 
-//สถิติบัณฑิต
-const StaticCareer = () => {
+//คาดการณ์สถิติบัณฑิต
+const PredictCareer = () => {
   const [data, setData] = useState([]);
   const [labels, setLabels] = useState([]);
   const [selectedYear, setSelectedYear] = useState("");
-  const jobData = data.length > 0 ? Object.values(data[0]) : [];
+  const jobData = Object.values(data);
 
-   useEffect(() => {
+
+  useEffect(() => {
     async function fetchData() {
       const response = await axios.get("http://localhost:8000/getCareerResult/");
       setData(response.data);
@@ -23,7 +25,7 @@ const StaticCareer = () => {
   };
 
   const filteredData = jobData.filter((item, index) => {
-    return selectedYear ? "Year" === selectedYear : true;
+    return selectedYear ? item.Year === selectedYear : true;
   });
 
   console.log("labels:", labels);
@@ -36,7 +38,8 @@ const StaticCareer = () => {
     datasets: [
       {
         label: "สายงาน",
-        data: filteredData.map((item) => "Num_of_student"),
+        //data: jobData.map((item) => item.Num_of_student),
+        data: filteredData.map((item) => item.Num_of_student),
         backgroundColor: ["#FFD670"],
       },
     ],
@@ -89,4 +92,4 @@ const StaticCareer = () => {
   );
 };
 
-export default StaticCareer;
+export default PredictCareer;

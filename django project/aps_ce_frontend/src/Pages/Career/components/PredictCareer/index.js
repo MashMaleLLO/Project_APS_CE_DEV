@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import BarChart from "../../components/BarChart";
+import axios from 'axios';
 import { MockData } from "../../components/MockData";
 
 //คาดการณ์สถิติบัณฑิต
@@ -7,11 +8,16 @@ const PredictCareer = () => {
   const [data, setData] = useState([]);
   const [labels, setLabels] = useState([]);
   const [selectedYear, setSelectedYear] = useState("");
-  const jobData = data.length > 0 ? Object.values(data[0]) : [];
+  const jobData = Object.values(data);
+
 
   useEffect(() => {
-    setData(MockData);
-    setLabels(Object.keys(MockData[0]));
+    async function fetchData() {
+      const response = await axios.get("http://localhost:8000/getCareerResult/");
+      setData(response.data);
+      setLabels(Object.keys(response.data));
+    }
+    fetchData();
   }, []);
 
   const handleYearFilter = (year) => {
