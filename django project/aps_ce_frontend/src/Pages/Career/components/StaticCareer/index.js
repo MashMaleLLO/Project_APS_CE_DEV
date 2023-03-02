@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import BarChart from "../../components/BarChart";
 import axios from 'axios';
-import { MockData } from "../../components/MockData";
 
 //คาดการณ์สถิติบัณฑิต
 const PredictCareer = () => {
