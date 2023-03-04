@@ -40,4 +40,6 @@ const RecommendedSubjectsList = ({ subjects }) => {
   );
 };
 
+console.log("nun");
+
 export default RecommendedSubjectsList;

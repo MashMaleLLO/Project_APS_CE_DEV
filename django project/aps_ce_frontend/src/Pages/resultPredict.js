@@ -30,4 +30,6 @@ const ResultPredict = ({ predicts }) => {
   );
 };
 
+console.log("nun");
+
 export default ResultPredict;

@@ -36,6 +36,8 @@ const DataUpload = () => {
     setDataType(type);
   }
 
+  console.log("nun");
+
   return (
     <>
       <div>
