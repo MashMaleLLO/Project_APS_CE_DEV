@@ -99,6 +99,57 @@ def file_api(request, id=0):
   return JsonResponse(res, safe=False)
 
 @csrf_exempt
+def file_content_edit(request, id = 0, index="Default"):
+  if request.method == 'PUT':
+    try:
+      inform = json.loads(request.body)
+      action = inform["action"]
+      index = inform["index"]
+      file_content = inform['content']
+    except:
+      print("Hi")
+      res = {"meassage" : "Can not find any index pls resummit again", "status" : status.HTTP_400_BAD_REQUEST}
+      return JsonResponse(res, safe=False)
+    if index == "Default" or id == 0: 
+      res = {"meassage" : "Can not find any index pls resummit again", "status" : status.HTTP_400_BAD_REQUEST}
+    else:
+      this_file = list(CSV_File.objects.filter(id = id).values())
+      if this_file == []:
+        res = {"message" : f'Can not find any file with id = {id}', "status" : status.HTTP_400_BAD_REQUEST}
+      else:
+        original_file = CSV_File.objects.get(id = id)
+        this_file = this_file[0]['file']
+        this_file = cPickle.loads(this_file)
+        content = pd.DataFrame(this_file)
+        if action == "Add":
+          new_content = pd.DataFrame([file_content])
+          try:
+            content = pd.concat([content, new_content], ignore_index=True)
+          except:
+            res = {"message" : "Error in process append content", "status" : status.HTTP_400_BAD_REQUEST}
+            return JsonResponse(res, safe=False)
+        elif action == "Edit":
+          new_content = pd.DataFrame([file_content])
+          try:
+            content.iloc[index] = new_content
+          except:
+            res = {"message" : "Error in process edit content", "status" : status.HTTP_400_BAD_REQUEST}
+            return JsonResponse(res, safe=False)
+        elif action == "Delete":
+          try:
+            content = content.drop(index=index)
+            content = content.reset_index(drop=True)
+          except:
+            res = {"message" : "Error in process delete content", "status" : status.HTTP_400_BAD_REQUEST}
+            return JsonResponse(res, safe=False)
+        original_file.file = cPickle.dumps(content)
+        original_file.save()
+        res = {"message" : f'Complete {action}', "status" : status.HTTP_200_OK}
+  else:
+    res = {"message":"Request method not match", "status": status.HTTP_400_BAD_REQUEST}
+  return JsonResponse(res, safe=False, json_dumps_params={'ensure_ascii': False})
+
+@csrf_exempt
 def student_data_api(request, id='all', curri='Default'):
   if request.method == 'GET':
     if request.body:
@@ -861,8 +912,12 @@ def reqPredict_career_manyUser(request, curriculum = 'วิศวกรรม�
     while curri_year % 4 != 0:
       curri_year = curri_year - 1
     curri_year = str(curri_year)
-    model_rec = list(SurpriseModel.objects.filter(curriculum = curriculum, year = curri_year).values())[-1]
-    model_career = list(CareerModel.objects.filter(curriculum = curriculum, year = curri_year).values())[-1]
+    try:
+      model_rec = list(SurpriseModel.objects.filter(curriculum = curriculum, year = curri_year).values())[-1]
+      model_career = list(CareerModel.objects.filter(curriculum = curriculum, year = curri_year).values())[-1]
+    except:
+      res = {"message" : "Can't find model that suite your request", "status" : status.HTTP_400_BAD_REQUEST}
+      return JsonResponse(res, safe=False)
     encode_class = model_career['encode_class']
     career_model = model_career['career_model']
     student_data = pd.DataFrame(list(Student_Data.objects.all().values()))

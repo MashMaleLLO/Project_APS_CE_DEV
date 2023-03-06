@@ -32,6 +32,7 @@ urlpatterns = [
     url(r'^delFlageFile$', view.csv_delete_handler),
     # Api gate way for recover flag files
     url(r'^recoverFile/(?P<id>\w+)$', view.file_recover),
+    url(r'^editFileContent/(?P<id>\w+)$', recc.file_content_edit),
 
     # url(r'^downloadCsv',view.csvDownload),
 
