@@ -43,11 +43,10 @@ const DataUpload = () => {
   };
 
   const handleDelete = (e, id) => {
+    console.log(id);
     e.preventDefault();
     async function fetchData() {
-      const response = await axios.delete(
-        `http://localhost:8000/getFile?id=${id}`
-      );
+      const response = await axios.delete(`http://localhost:8000/getFile/`+id);
     }
     fetchData();
   };
