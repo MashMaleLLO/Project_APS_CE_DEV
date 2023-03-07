@@ -68,15 +68,15 @@ const PredictStudent = () => {
       {showPredicts ? (
         <ResultPredict predicts={predicts} />
       ) : (
-        <div className="flex flex-col min-h-screen justify-between">
-          <div className="container mx-auto py-8 px-4">
+        <div className="flex flex-col h-[calc(100vh-64px)] 2xl:h-[calc(100vh-128px)] justify-between">
+          <div className="container mx-auto py-8 px-8 md:px-32">
             <h1 className="py-12 text-xl md:text-2xl font-bold">
               พยากรณ์นักศึกษา
             </h1>
-            <div className="container mx-auto flex flex-col rounded-lg drop-shadow-md bg-white px-8 py-8 space-y-6 w-full h-[500px]">
+            <div className="container mx-auto flex flex-col rounded-lg drop-shadow-md bg-white px-4 py-8 space-y-6 w-full h-[420px]">
               <form onSubmit={getDownloadFile}>
-                <div className="flex flex-wrap items-end gap-8">
-                  <div className="space-y-2 text-base md:text-lg w-full md:w-1/4">
+                <div className="flex items-end flex-wrap gap-8">
+                  <div className="space-y-2 text-sm md:text-base w-full md:w-[25%]">
                     {/* เเถวที่ 1 : Dropdown*/}
                     <label htmlFor="select-option">คณะ</label>
                     <select
@@ -93,7 +93,7 @@ const PredictStudent = () => {
                       </option>
                     </select>
                   </div>
-                  <div className="space-y-2 text-base md:text-lg w-full md:w-1/4">
+                  <div className="space-y-2 text-sm md:text-base w-full md:w-[25%]">
                     <label htmlFor="select-option">หลักสูตร</label>
                     <select
                       id="select-year"
@@ -108,10 +108,10 @@ const PredictStudent = () => {
                       <option value="2564">2564</option>
                     </select>
                   </div>
-                  <div className=" text-lg md:text-2xl w-full md:w-2/4">
+                  <div className="w-full md:w-[25%]">
                     <button
                       type="download"
-                      className="text-white text-base md:text-lg px-4 py-2 rounded-lg bg-[#FF9D2E] hover:bg-[#F28204]"
+                      className="text-white text-sm md:text-base px-4 py-2 rounded-lg bg-[#FF9D2E] hover:bg-[#F28204]"
                     >
                       ดาวน์โหลดไฟล์แบบฟอร์มสำหรับการวิเคราะห์
                     </button>
@@ -165,7 +165,7 @@ const PredictStudent = () => {
                     <div>
                       <button
                         type="submit"
-                        className="text-white font-bold text-base md:text-lg px-4 py-2 rounded-lg bg-[#FB8500] hover:bg-[#F28204]"
+                        className="text-white font-bold text-sm md:text-base px-4 py-2 rounded-lg bg-[#FB8500] hover:bg-[#F28204]"
                       >
                         พยากรณ์
                       </button>
