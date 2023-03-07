@@ -25,7 +25,7 @@ urlpatterns = [
     url(r'^hello$', view.hello),
     url(r'^fileUpload$', view.csv_upload),  # Api gate way for upload file
 
-    url(r'^getFile$', recc.file_api),  # Api gate way for upload file
+    url(r'^getFile', recc.file_api),  # Api gate way for upload file
     # Api gate way for upload file
     url(r'^getFile/(?P<id>\w+)$', recc.file_api),
     # Api gate way for delete flag files

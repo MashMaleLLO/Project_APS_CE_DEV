@@ -155,7 +155,7 @@ def subject_csv_upload_hander(request, csv_id=0):
 
 
 @csrf_exempt
-def csv_upload(request, id=0, type_data='แบบสอบถามการมีงานทำ'):
+def csv_upload(request, id=0, type_data='Default'):
     if request.method == 'POST':
         if request.body:
             try:
