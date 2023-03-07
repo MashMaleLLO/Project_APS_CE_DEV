@@ -107,7 +107,6 @@ def file_content_edit(request, id = 0, index="Default"):
       index = inform["index"]
       file_content = inform['content']
     except:
-      print("Hi")
       res = {"meassage" : "Can not find any index pls resummit again", "status" : status.HTTP_400_BAD_REQUEST}
       return JsonResponse(res, safe=False)
     if index == "Default" or id == 0: 
@@ -950,9 +949,9 @@ def reqPredict_career_manyUser(request, curriculum = 'วิศวกรรม�
     for j in pred_result:
       lis_key = list(response.keys())
       if encode_class[int(j)] in lis_key:
-        response[encode_class[int(j)]] += 1
+        response[encode_class[int(j)]]['Num_of_student'] += 1
       else:
-        dic = {encode_class[int(j)]:1}
+        dic = {encode_class[int(j)] : {"Year" : start_year, "Num_of_student" : 1}}
         response.update(dic)
     res = {"message" : response, "status" : status.HTTP_200_OK}
   else:

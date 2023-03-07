@@ -426,6 +426,7 @@ def get_career_result(request):
                 "Num_of_student": i[2]
             }}
             res.update(d)
+        res = {"message" : res, "status" : status.HTTP_200_OK}
     else:
         res = {"message": "Method not match.",
                "status": status.HTTP_400_BAD_REQUEST}
