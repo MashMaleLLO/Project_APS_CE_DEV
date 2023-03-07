@@ -26,9 +26,9 @@ urlpatterns = [
     url(r'^fileUpload', view.csv_upload),  # Api gate way for upload file
     url(r'^fileUpload/(?P<id>\w+)$', view.csv_upload),  # Api gate way for upload file
 
-    url(r'^getFile', recc.file_api),  # Api gate way for upload file
     # Api gate way for upload file
     url(r'^getFile/(?P<id>\w+)$', recc.file_api),
+    url(r'^getFile', recc.file_api),
     # Api gate way for delete flag files
     url(r'^delFlageFile$', view.csv_delete_handler),
     # Api gate way for recover flag files
