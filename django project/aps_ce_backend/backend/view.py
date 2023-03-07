@@ -154,19 +154,23 @@ def subject_csv_upload_hander(request, csv_id=0):
     return JsonResponse(res, safe=False)
 
 
+def file_upload(request):
+    file = request.FILES.get('file')
+    type_data = json.loads(request.POST.get('type_data'))
+
+
 @csrf_exempt
 def csv_upload(request, id=0, type_data='Default'):
     if request.method == 'POST':
-        if request.body:
+        if request.POST.get:
             try:
-                file_info = json.loads(request.body)
-                type_data = file_info['type_data']
+                type_data = json.loads(request.POST.get('type_data'))
             except:
                 pass
             print(type_data)
         csv_file = None
-        if 'path_to_csv' in request.FILES:
-            csv_file = request.FILES['path_to_csv']
+        if request.FILES.get:
+            csv_file = request.FILES.get('path_to_csv')
             if not csv_file.name.endswith('.csv'):
                 res = {"message": "File format not match pls upload only .csv file",
                        "status": status.HTTP_400_BAD_REQUEST}
@@ -200,8 +204,8 @@ def csv_upload(request, id=0, type_data='Default'):
             else:
                 this_file = CSV_File.objects.get(id=id)
                 csv_file = None
-                if 'path_to_csv' in request.FILES:
-                    csv_file = request.FILES['path_to_csv']
+                if 'path_to_csv' in request.FILES.get:
+                    csv_file = request.FILES.get('path_to_csv')
                     if not csv_file.name.endswith('.csv'):
                         res = {"message": "File format not match pls upload only .csv file",
                                "status": status.HTTP_400_BAD_REQUEST}
@@ -211,10 +215,10 @@ def csv_upload(request, id=0, type_data='Default'):
                     df = df.astype(str)  # cast all columns to str
                     pickled_data = cPickle.dumps(df)
                     if pickled_data:
-                        if request.body:
-                            up_date_file_info = json.loads(request.body)
-                            new_name = up_date_file_info['name']
-                            new_type_data = up_date_file_info['type_data']
+                        if request.POST.get:
+                            new_name = json.loads(request.POST.get('name'))
+                            new_type_data = json.loads(
+                                request.POST.get('type_data'))
                         else:
                             new_name = csv_file.name
                             new_type_data = this_file.type_data
@@ -229,11 +233,12 @@ def csv_upload(request, id=0, type_data='Default'):
                         res = {"message": f'serializer is not valid for file {csv_file.name}',
                                "status": status.HTTP_400_BAD_REQUEST}
                 else:
-                    if request.body:
+                    if request.POST.get:
                         old_name = this_file.name
-                        up_date_file_info = json.loads(request.body)
-                        new_name = up_date_file_info['name']
-                        new_type_data = up_date_file_info['type_data']
+                        new_name = json.loads(
+                            request.POST.get('name'))
+                        new_type_data = json.loads(
+                            request.POST.get('type_data'))
                         this_file.name = new_name
                         this_file.type_data = new_type_data
                         this_file.save()
@@ -426,7 +431,7 @@ def get_career_result(request):
                 "Num_of_student": i[2]
             }}
             res.update(d)
-        res = {"message" : res, "status" : status.HTTP_200_OK}
+        res = {"message": res, "status": status.HTTP_200_OK}
     else:
         res = {"message": "Method not match.",
                "status": status.HTTP_400_BAD_REQUEST}
@@ -446,7 +451,8 @@ def csv_template_generator(request, curri='วิศวกรรมคอมพ�
             while curri_year % 4 != 0:
                 curri_year = curri_year - 1
             curri_year = str(curri_year)
-            subjects = list(Subject_Data.objects.filter(year=curri_year).values())
+            subjects = list(Subject_Data.objects.filter(
+                year=curri_year).values())
             response = HttpResponse(content_type='text/csv')
             response.write(codecs.BOM_UTF8)
             writer = csv.writer(response)
@@ -524,7 +530,8 @@ def gradeUploader(request):
             response = recc.reqPredictPerUser_Production(
                 df, this_student_id, this_student_curri, this_student_year)
             for i in range(len(response) - 1):
-                this_grade = numerical_to_alphabetical_grade(response[i]['grade'])
+                this_grade = numerical_to_alphabetical_grade(
+                    response[i]['grade'])
                 response[i]['grade'] = this_grade
                 print(response[i])
             print(response[-1])
