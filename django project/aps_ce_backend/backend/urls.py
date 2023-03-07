@@ -23,7 +23,8 @@ from recommend import views as recc
 urlpatterns = [
     path('admin/', admin.site.urls),
     url(r'^hello$', view.hello),
-    url(r'^fileUpload$', view.csv_upload),  # Api gate way for upload file
+    url(r'^fileUpload', view.csv_upload),  # Api gate way for upload file
+    url(r'^fileUpload/(?P<id>\w+)$', view.csv_upload),  # Api gate way for upload file
 
     url(r'^getFile', recc.file_api),  # Api gate way for upload file
     # Api gate way for upload file
