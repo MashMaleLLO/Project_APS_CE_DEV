@@ -30,6 +30,7 @@ const PredictStudent = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     // console.log(e.target.model.value);
+    console.log(formData['path_to_csv']);
     async function fetchData() {
       setIsLoading(true);
       let res = await axios.post("http://localhost:8000/reqPredict", formData);
