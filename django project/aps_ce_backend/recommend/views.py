@@ -80,8 +80,10 @@ def file_api(request, id=0):
         this_file = pd.DataFrame(this_file)
         content = cPickle.loads(content)
         content = content.to_dict('records')
+        print(len(content))
         res = this_file[['id','name', 'upload_date', 'update_date', 'del_flag', 'type_data']].to_dict('records')[0]
         res = { "message" : {"file_information" : res, "file_content" : content}, "status": status.HTTP_200_OK }
+        print(res)
   elif request.method=='DELETE':
     if id == 0:
       res = {"message" : "Pls enter file id" , "status" : status.HTTP_400_BAD_REQUEST}
