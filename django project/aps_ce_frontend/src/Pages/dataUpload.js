@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 const DataUpload = () => {
   let formData = new FormData();
@@ -8,6 +9,7 @@ const DataUpload = () => {
   const [data, setData] = useState([]);
   const [pageStudentData, setPageStudentData] = useState(false);
   const [filteredData, setFilteredData] = useState([]);
+  const navigate = useNavigate();
 
   useEffect(() => {
     async function fetchData() {
@@ -46,7 +48,9 @@ const DataUpload = () => {
     console.log(id);
     e.preventDefault();
     async function fetchData() {
-      const response = await axios.delete(`http://localhost:8000/getFile/`+id);
+      await axios.delete(`http://localhost:8000/getFile/`+id);
+      const response = await axios.get("http://localhost:8000/getFile");
+      setData(response.data.message);
     }
     fetchData();
   };
@@ -63,11 +67,17 @@ const DataUpload = () => {
       );
       setPageStudentData(true);
     }
-    console.log("หลังฟิล" + filteredData);
+    console.log("หลังฟิล", filteredData);
   }, [dataType, data]);
 
   const handleButtonClick = (type) => {
     setDataType(type);
+  };
+
+  const dataEdit = (item) => {
+    console.log('ใช้edit',item);
+    let dataEdit = `/dataEdit/${item}`;
+    navigate(dataEdit);
   };
 
   return (
@@ -98,8 +108,11 @@ const DataUpload = () => {
               <div key={item.id}>
                 <p>{item.name}</p>
                 <button onClick={(e) => handleDelete(e, item.id)}>
-                  Delete
+                  ลบ
                 </button>
+                <button onClick={() => dataEdit(item.id)}>
+                  แก้ไขไฟล์
+                </button> 
               </div>
             ))}
           </ul>
@@ -121,8 +134,11 @@ const DataUpload = () => {
               <div key={item.id}>
                 <p>{item.name}</p>
                 <button onClick={(e) => handleDelete(e, item.id)}>
-                  Delete
+                  ลบ
                 </button>
+                <button onClick={() => dataEdit(item.id)}>
+                  แก้ไขไฟล์
+                </button> 
               </div>
             ))}
           </ul>

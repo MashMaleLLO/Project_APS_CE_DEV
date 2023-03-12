@@ -1,6 +1,7 @@
 import React from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import DataUpload from "./Pages/dataUpload";
+import DataEdit from "./Pages/dataEdit";
 import GenModel from "./Pages/genModel";
 import ModelList from "./Pages/modelList";
 import CareerUpdate from "./Pages/updateStudentCareer";
@@ -28,6 +29,14 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/Career" element={<Career />} />
 
+          <Route
+            path="/dataEdit/:id"
+            element={
+              <center>
+                <DataEdit />
+              </center>
+            }
+          />
           <Route
             path="/dataUpload"
             element={
