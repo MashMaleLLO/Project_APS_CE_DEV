@@ -27,7 +27,7 @@ export default function RecommendModal({ subjects }) {
   return (
     <div>
       <Button onClick={handleOpen}>
-        <div className="flex text-sm md:text-base bg-[#FFD670] p-2 rounded-lg">
+        <div className="flex text-[#999999] text-sm md:text-base bg-[#FFD670] p-2 rounded-lg">
           ดูรายละเอียด
         </div>
       </Button>

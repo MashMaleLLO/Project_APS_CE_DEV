@@ -88,50 +88,28 @@ const RecommendSubject = () => {
                 </div>
 
                 <h1 className="text-sm md:text-base">เลือกความสนใจ</h1>
-                <div className="flex flex-wrap md:flex-row items-center gap-4 bg-green-200">
+                <div className="flex flex-wrap gap-4">
                   {keys.map((subject) => (
-                    <div
-                      key={subject}
-                      className="flex flex-wrap gap-18"
-                    >
-                      <label className="btn text-black border border-black text-sm md:text-base px-4 py-2 rounded-lg focus:ring-2 focus:bg-[#FF9D2E] focus:border-[#FF9D2E] cursor-pointer">
+                    <div className="flex items-center gap-2">
+                      <div className="relative flex items-center">
                         <input
-                          id="subject_id"
+                          id="checkbox"
                           type="checkbox"
-                          //className="hidden"
-                          className=""
+                          className="absolute peer  w-full h-full opacity-0 accent-blue-300 focus:accent-blue-500 rounded-full"
                           value={subject}
                           checked={selectedSubjects.includes(subject)}
                           onChange={handleCheckboxChange}
-                          //required
                         />
-                      
-                        {subject}
-                      </label>
+                        <label
+                          for="checkbox"
+                          className="p-8 text-black border border-grey-300 text-sm md:text-base px-4 py-2 rounded-lg select-none peer peer-checked:bg-[#FF9D2E] peer-checked:border-[#FF9D2E] peer-checked:text-white cursor-pointer"
+                        >
+                          {subject}
+                        </label>
+                      </div>
                     </div>
                   ))}
                 </div>
-
-                {/* {keys.map((subject) => (
-                  <div className="flex flex-wrap md:flex-row gap-2">
-                    <div className="flex items-center">
-                      <input
-                        id="subject_id"
-                        type="checkbox"
-                        className="absolute peer w-4 h-4 left-6 accent-blue-300 focus:accent-blue-500 rounded-full"
-                        value={subject}
-                        checked={selectedSubjects.includes(subject)}
-                        onChange={handleCheckboxChange}
-                      />
-                      <label
-                        htmlFor="subject_id"
-                        className="p-8 text-black border border-grey-300 text-sm md:text-base px-4 py-2 rounded-lg select-none peer peer-checked:bg-[#FF9D2E] peer-checked:border-[#FF9D2E] peer-checked:text-white cursor-pointer"
-                      >
-                        {subject}
-                      </label>
-                    </div>
-                  </div>
-                ))} */}
 
                 <div className="flex justify-center py-4">
                   <button

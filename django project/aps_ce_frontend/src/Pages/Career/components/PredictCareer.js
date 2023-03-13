@@ -14,10 +14,12 @@ const PredictCareer = () => {
   useEffect(() => {
     setLoading(true);
     const fetchData = async () => {
+      console.log("nunt 1")
       const response = await axios.post("http://localhost:8000/req_pred_many",{
         curriculum : "วิศวกรรมคอมพิวเตอร์",
         year : year
       });
+      console.log("nunt 2")
       setData(response.data.message);
       setLabels(Object.keys(response.data.message));
       console.log("โชว์ดาต้า"+data);

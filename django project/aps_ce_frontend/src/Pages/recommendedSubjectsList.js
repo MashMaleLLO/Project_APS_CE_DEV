@@ -35,7 +35,7 @@ const RecommendedSubjectsList = ({ subjects }) => {
                       key={subject.subject_id}
                       onClick={() => handleClick(subject)}
                       className={`flex items-center justify-between text-sm md:text-base py-2 border-b-[1.5px] border-[#A7A7A7] ${
-                        index === subjects.length - 1 && "border-b-0"
+                        index === subjects.length - 1 && "border-b-0 border-white"
                       }`}
                     >
                       <div className="text-sm md:text-base">
