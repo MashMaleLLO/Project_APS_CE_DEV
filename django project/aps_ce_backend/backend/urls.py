@@ -48,6 +48,8 @@ urlpatterns = [
     url(r'^students_data/(?P<id>\w+)$', recc.student_data_api),
     url(r'^students_data/(?P<id>\w+)/(?P<curri>\w+)$',
         recc.student_data_api),  # Api gate way of student data
+    #Api update career by each one
+    url(r'^update_student_career_by_one', view.update_career_by_one),
 
     # Api gate way of student grade
     url(r'^students_grade$', recc.student_grade_api),

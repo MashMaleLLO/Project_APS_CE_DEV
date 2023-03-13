@@ -552,6 +552,40 @@ def getPossibleYear(request):
     year = list(df['start_year'].unique())
     return JsonResponse(year, safe=False, json_dumps_params={'ensure_ascii': False})
 
+@csrf_exempt
+def update_career_by_one(request):
+    if request.method == 'PUT':
+        try:
+            body = json.loads(request.body)
+            this_student_id = body['id']
+            career = body['career']
+        except:
+            res = {"message" : "Error body not found or body corrupt pls resending again", "status" : status.HTTP_400_BAD_REQUEST}
+            return JsonResponse(res, safe=False)
+        try:
+            this_student = Student_Data.objects.get(student_id=this_student_id)
+        except:
+            res = {"message" : f'Can not find student with id = {this_student_id}' , "status" : status.HTTP_400_BAD_REQUEST}
+            return JsonResponse(res, safe=False)
+        update_data = {
+            "student_id" : this_student.student_id,
+            "curriculum" : this_student.curriculum,
+            "status" : "graduate",
+            "career" : career,
+            "start_year" : this_student.start_year,
+            "curriculum_year" : this_student.curriculum_year
+        }
+        student_serializer = StudentSerializer(this_student, data=update_data)
+        if student_serializer.is_valid():
+            student_serializer.save()
+            res = {"message": f'Update {student_serializer.data}', "status": status.HTTP_200_OK}
+        else:
+            res = {"message": f'Serailizer failed at {student_serializer.data}', "status": status.HTTP_400_BAD_REQUEST}
+    else:
+        res = {"message": "Method not match.",
+               "status": status.HTTP_400_BAD_REQUEST}
+    return JsonResponse(res, safe=False)
+
 ##### UC03############
 
 ###### Register######

@@ -1,13 +1,5 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-<<<<<<< HEAD
-import { useNavigate , useParams} from "react-router-dom";
-
-const DataEdit = () => {
-  const navigate = useNavigate();
-  const {id} = useParams();
-  const [data, setData] = useState([]);
-=======
 import { useNavigate, useParams } from "react-router-dom";
 
 const DataEdit = () => {
@@ -16,36 +8,23 @@ const DataEdit = () => {
   const [data, setData] = useState([]);
   const [selectedRow, setSelectedRow] = useState(null);
   const [editContent, setEditContent] = useState("");
->>>>>>> master
 
   const dataUpload = () => {
     let dataUpload = `/dataUpload`;
     navigate(dataUpload);
   };
 
-  useEffect(() => {
-    async function fetchData() {
-<<<<<<< HEAD
-      const response = await axios.get(`http://localhost:8000/getFile/`+id);
-=======
+  async function fetchData() {
       const response = await axios.get(`http://localhost:8000/getFile/` + id);
->>>>>>> master
       setData(response.data.message.file_content);
     }
+
+  useEffect(() => {
+    
     fetchData();
   }, []);
+  
 
-<<<<<<< HEAD
-  console.log('ควย',data);
-
-  return (
-    <>
-      <h1>สวัสดี</h1>
-      <button onClick={dataUpload}>กลับ</button>
-      {data.map((item) => (
-                <p>{item.student_id}</p>
-            ))}
-=======
   const handleRowClick = (row) => {
     setSelectedRow(row);
   };
@@ -55,13 +34,14 @@ const DataEdit = () => {
 
     console.log("index",data.indexOf(selectedRow));
     console.log("content",editContent);
-    const response = await axios.put(`http://localhost:8000/editFileContent/${id}`, {
+    await axios.put(`http://localhost:8000/editFileContent/`+ id, {
       action: "Edit",
       index: data.indexOf(selectedRow),
-      content: editContent,
+      content: JSON.parse(editContent),
     });
 
-    setData(response.data.message.file_content);
+    fetchData();
+
     setSelectedRow(null);
     setEditContent("");
   };
@@ -103,13 +83,8 @@ const DataEdit = () => {
         </div>
       )}
       <button onClick={dataUpload}>กลับ</button>
->>>>>>> master
     </>
   );
 };
 
-<<<<<<< HEAD
 export default DataEdit;
-=======
-export default DataEdit;
->>>>>>> master
