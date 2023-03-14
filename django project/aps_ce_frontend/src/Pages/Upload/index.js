@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
-import PredictCareer from "./components/PredictCareer";
-import StaticCareer from "./components/StaticCareer";
+// import PredictUpload from "./components/PredictUpload";
+// import StaticUpload from "./components/StaticUpload";
 
-const OutputCareer = () => {
+const Upload = () => {
   //เลือกหัวข้อ
   const [selectedButton, setselectedButton] = useState("button1");
 
@@ -20,7 +20,7 @@ const OutputCareer = () => {
             } text-xl md:text-2xl font-bold cursor-pointer py-4 px-4`}
             onClick={() => handleButtonClick("button1")}
           >
-            สถิติบัณฑิต
+            ข้อมูลนักศึกษา
           </button>
           <span className="text-xl md:text-2xl">|</span>
           <button
@@ -29,17 +29,17 @@ const OutputCareer = () => {
             } text-xl md:text-2xl font-bold cursor-pointer py-4 px-4`}
             onClick={() => handleButtonClick("button2")}
           >
-            คาดการณ์สถิติบัณฑิต
+            หลักสูตรวิชา
           </button>
         </div>
 
         {selectedButton === "button1" ? (
           <div className="flex flex-col">
-            <StaticCareer />
+            {/* <StaticUpload /> */}
           </div>
         ) : (
           <div className="flex flex-col">
-            <PredictCareer />
+            {/* <PredictUpload /> */}
           </div>
         )}
       </div>
@@ -47,4 +47,4 @@ const OutputCareer = () => {
   );
 };
 
-export default OutputCareer;
+export default Upload;

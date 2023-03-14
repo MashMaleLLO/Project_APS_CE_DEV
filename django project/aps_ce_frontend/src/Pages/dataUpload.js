@@ -11,11 +11,12 @@ const DataUpload = () => {
   const [filteredData, setFilteredData] = useState([]);
   const navigate = useNavigate();
 
+  async function fetchData() {
+    const response = await axios.get("http://localhost:8000/getFile");
+    setData(response.data.message);
+  }
+
   useEffect(() => {
-    async function fetchData() {
-      const response = await axios.get("http://localhost:8000/getFile");
-      setData(response.data.message);
-    }
     fetchData();
   }, []);
 
@@ -27,10 +28,10 @@ const DataUpload = () => {
     if (e.currentTarget.files) setCsvFile(e.currentTarget.files[0]);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     formData.append("type_data", JSON.stringify(dataType)); // append the JSON object to the form data
-    axios
+    await axios
       .post("http://localhost:8000/fileUpload", formData, {
         headers: {
           "Content-Type": "multipart/form-data", // set the content type to multipart/form-data
@@ -42,17 +43,21 @@ const DataUpload = () => {
       .catch((error) => {
         console.log(error);
       });
+    const response = await axios.get("http://localhost:8000/getFile");
+    setData(response.data.message);
   };
 
   const handleDelete = (e, id) => {
     console.log(id);
     e.preventDefault();
-    async function fetchData() {
-      await axios.delete(`http://localhost:8000/getFile/`+id);
-      const response = await axios.get("http://localhost:8000/getFile");
-      setData(response.data.message);
+    if (window.confirm("คุณแน่ใจใช่ไหมว่าจะลบไฟล์")) {
+      async function fetchData() {
+        await axios.delete(`http://localhost:8000/getFile/` + id);
+        const response = await axios.get("http://localhost:8000/getFile");
+        setData(response.data.message);
+      }
+      fetchData();
     }
-    fetchData();
   };
 
   useEffect(() => {
@@ -75,7 +80,7 @@ const DataUpload = () => {
   };
 
   const dataEdit = (item) => {
-    console.log('ใช้edit',item);
+    console.log("ใช้edit", item);
     let dataEdit = `/dataEdit/${item}`;
     navigate(dataEdit);
   };
@@ -92,34 +97,64 @@ const DataUpload = () => {
         </button>
       </div>
       {pageStudentData ? (
-        <div className="flex flex-col gap-6 justify-center items-center h-screen">
-          <h1>ข้อมูลในระบบ</h1>
-          <form onSubmit={handleSubmit}>
-            <input type="file" accept=".csv" onChange={handleChange} />
-            <button
-              type="submit"
-              className="bg-blue-500 px-4 py-2 rounded-md font-semibold"
-            >
-              อัพโหลดไฟล์
-            </button>
-          </form>
-          <ul>
-            {filteredData.map((item) => (
-              <div key={item.id}>
-                <p>{item.name}</p>
-                <button onClick={(e) => handleDelete(e, item.id)}>
-                  ลบ
+        <div className="flex flex-col mx-auto py-8 px-8 md:mb-20 md:px-32 xl:mb-36">
+          <h1 className="py-6 text-xl md:text-2xl">ข้อมูลในระบบ</h1>
+          <div className="container mx-auto flex flex-col rounded-lg drop-shadow-md bg-white px-8 py-8 space-y-6 w-full ">
+            <form onSubmit={handleSubmit}>
+              <div className="flex gap-8">
+                <div className="w-full md:w-[30%]">
+                  <input
+                    type="file"
+                    accept=".csv"
+                    onChange={handleChange}
+                    className="w-full px-4 py-1 text-gray-500 bg-white border border-grey-300 rounded-lg focus:bg-grey-200 focus:border-[#FB8500] focus:outline-none
+              file:bg-[#FF9D2E] file:rounded-lg file:border-none file:px-2.5 file:py-1.5 file:text-white file:cursor-pointer file:mr-4"
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  className="w-[120px] text-white font-bold text-sm md:text-base px-4 py-2 rounded-lg bg-[#FB8500] hover:bg-[#F28204]"
+                >
+                  อัพโหลดไฟล์
                 </button>
-                <button onClick={() => dataEdit(item.id)}>
-                  แก้ไขไฟล์
-                </button> 
               </div>
-            ))}
-          </ul>
+            </form>
+            <div className="flex flex-col gap-2 px-4">
+              {filteredData.map((item, index) => (
+                <div
+                  key={item.id}
+                  className="flex justify-between py-2 border-b-[1.5px] border-[#A7A7A7]"
+                >
+                  <ol className="text-sm md:text-base">
+                    <li key={index}> {`${index + 1}. ${item.name}`}</li>
+                  </ol>
+                  <div className="flex items-end gap-4">
+                    <div>
+                      <button
+                        className="w-full text-white font-bold text-sm md:text-base px-4 py-2 rounded-lg bg-[#FB8500] hover:bg-[#F28204]"
+                        onClick={(e) => handleDelete(e, item.id)}
+                      >
+                        ลบ
+                      </button>
+                    </div>
+                    <div>
+                      <button
+                        className="w-full text-white font-bold text-sm md:text-base px-4 py-2 rounded-lg bg-[#FB8500] hover:bg-[#F28204]"
+                        onClick={() => dataEdit(item.id)}
+                      >
+                        แก้ไขไฟล์
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       ) : (
         <div className="flex flex-col gap-6 justify-center items-center h-screen">
-          <h1>ข้อมูลในระบบ</h1>
+          <h1>ข้อมูลในระบบ2</h1>
           <form onSubmit={handleSubmit}>
             <input type="file" accept=".csv" onChange={handleChange} />
             <button
@@ -133,12 +168,8 @@ const DataUpload = () => {
             {filteredData.map((item) => (
               <div key={item.id}>
                 <p>{item.name}</p>
-                <button onClick={(e) => handleDelete(e, item.id)}>
-                  ลบ
-                </button>
-                <button onClick={() => dataEdit(item.id)}>
-                  แก้ไขไฟล์
-                </button> 
+                <button onClick={(e) => handleDelete(e, item.id)}>ลบ</button>
+                <button onClick={() => dataEdit(item.id)}>แก้ไขไฟล์</button>
               </div>
             ))}
           </ul>

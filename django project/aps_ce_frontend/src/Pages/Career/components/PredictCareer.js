@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { BarChart } from './BarChart'
 import axios from 'axios';
-import { Loading } from "./Looding";
+import { Loading }  from "../../../Component/Loading";
 
 //คาดการณ์สถิติบัณฑิต
 const PredictCareer = () => {
