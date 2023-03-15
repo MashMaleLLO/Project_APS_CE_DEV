@@ -6,8 +6,8 @@ const DataEdit = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const [data, setData] = useState([]);
+  const [nameData, setNameData] = useState([]);
   const [selectedRow, setSelectedRow] = useState(null);
-  const [addRow, setAddRow] = useState(false);
   const [editContent, setEditContent] = useState("");
   const [addContent, setAddContent] = useState("");
 
@@ -18,8 +18,9 @@ const DataEdit = () => {
 
   async function fetchData() {
     const response = await axios.get(`http://localhost:8000/getFile/` + id);
-    console.log(response.data)
+    console.log(response.data);
     setData(response.data.message.file_content);
+    setNameData(response.data.message.file_information.name);
   }
 
   useEffect(() => {
@@ -28,10 +29,6 @@ const DataEdit = () => {
 
   const handleRowClick = (row) => {
     setSelectedRow(row);
-  };
-
-  const handleAddClick = (row) => {
-    setAddRow(true);
   };
 
   const handleDelete = async (row) => {
@@ -77,12 +74,24 @@ const DataEdit = () => {
 
     fetchData();
 
-    setAddRow(false);
     setAddContent("");
   };
 
   return (
     <>
+      <h1>{nameData}</h1>
+      <div>
+        <form onSubmit={handleAddFormSubmit}>
+          <label>
+            <input
+              type="text"
+              value={addContent}
+              onChange={(event) => setAddContent(event.target.value)}
+            />
+          </label>
+          <button type="submit">เพิ่มข้อมูล</button>
+        </form>
+      </div>
       <table>
         <thead>
           <tr>
@@ -120,23 +129,7 @@ const DataEdit = () => {
           </form>
         </div>
       )}
-      <button onClick={(e) => handleAddClick(e)}>เพิ่ม</button>
-      {addRow && (
-        <div>
-          <h2>Row Details</h2>
-          <form onSubmit={handleAddFormSubmit}>
-            <label>
-              Add content:
-              <input
-                type="text"
-                value={addContent}
-                onChange={(event) => setAddContent(event.target.value)}
-              />
-            </label>
-            <button type="submit">Save</button>
-          </form>
-        </div>
-      )}
+
       <button onClick={dataUpload}>กลับ</button>
     </>
   );

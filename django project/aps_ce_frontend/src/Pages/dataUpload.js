@@ -85,16 +85,31 @@ const DataUpload = () => {
     navigate(dataEdit);
   };
 
+
   return (
     <>
-      <div>
-        <button onClick={() => handleButtonClick("ข้อมูลรายวิชา")}>
-          Subject Data
-        </button>
-        <br></br>
-        <button onClick={() => handleButtonClick("ข้อมูลเกรดและนักศึกษา")}>
-          Student Data
-        </button>
+      <div className="w-full py-12">
+        <div className="flex items-center justify-center">
+          <button
+            className={`${
+              dataType === "ข้อมูลเกรดและนักศึกษา"
+                ? "text-black"
+                : "text-[#A7A7A7]"
+            } text-xl md:text-2xl font-bold cursor-pointer py-4 px-4`}
+            onClick={() => handleButtonClick("ข้อมูลเกรดและนักศึกษา")}
+          >
+            ข้อมูลนักศึกษา
+          </button>
+          <span className="text-xl md:text-2xl">|</span>
+          <button
+            className={`${
+              dataType === "ข้อมูลรายวิชา" ? "text-black" : "text-[#A7A7A7]"
+            } text-xl md:text-2xl font-bold cursor-pointer py-4 px-4`}
+            onClick={() => handleButtonClick("ข้อมูลรายวิชา")}
+          >
+            หลักสูตรวิชา
+          </button>
+        </div>
       </div>
       {pageStudentData ? (
         <div className="flex flex-col mx-auto py-8 px-8 md:mb-20 md:px-32 xl:mb-36">
@@ -124,10 +139,14 @@ const DataUpload = () => {
               {filteredData.map((item, index) => (
                 <div
                   key={item.id}
-                  className="flex justify-between py-2 border-b-[1.5px] border-[#A7A7A7]"
+                  className={`flex justify-between py-2 ${
+                    index !== filteredData.length - 1
+                      ? "border-b-[1.5px] border-[#A7A7A7]"
+                      : ""
+                  }`}
                 >
                   <ol className="text-sm md:text-base">
-                    <li key={index}> {`${index + 1}. ${item.name}`}</li>
+                    <li key={index + 1}> {`${index + 1}. ${item.name}`}</li>
                   </ol>
                   <div className="flex items-end gap-4">
                     <div>
@@ -153,26 +172,64 @@ const DataUpload = () => {
           </div>
         </div>
       ) : (
-        <div className="flex flex-col gap-6 justify-center items-center h-screen">
-          <h1>ข้อมูลในระบบ2</h1>
-          <form onSubmit={handleSubmit}>
-            <input type="file" accept=".csv" onChange={handleChange} />
-            <button
-              type="submit"
-              className="bg-blue-500 px-4 py-2 rounded-md font-semibold"
-            >
-              อัพโหลดไฟล์
-            </button>
-          </form>
-          <ul>
-            {filteredData.map((item) => (
-              <div key={item.id}>
-                <p>{item.name}</p>
-                <button onClick={(e) => handleDelete(e, item.id)}>ลบ</button>
-                <button onClick={() => dataEdit(item.id)}>แก้ไขไฟล์</button>
+        <div className="flex flex-col mx-auto py-8 px-8 md:mb-20 md:px-32 xl:mb-36">
+          <h1 className="py-6 text-xl md:text-2xl">ข้อมูลในระบบ</h1>
+          <div className="container mx-auto flex flex-col rounded-lg drop-shadow-md bg-white px-8 py-8 space-y-6 w-full ">
+            <form onSubmit={handleSubmit}>
+              <div className="flex gap-8">
+                <div className="w-full md:w-[30%]">
+                  <input
+                    type="file"
+                    accept=".csv"
+                    onChange={handleChange}
+                    className="w-full px-4 py-1 text-gray-500 bg-white border border-grey-300 rounded-lg focus:bg-grey-200 focus:border-[#FB8500] focus:outline-none
+    file:bg-[#FF9D2E] file:rounded-lg file:border-none file:px-2.5 file:py-1.5 file:text-white file:cursor-pointer file:mr-4"
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  className="w-[120px] text-white font-bold text-sm md:text-base px-4 py-2 rounded-lg bg-[#FB8500] hover:bg-[#F28204]"
+                >
+                  อัพโหลดไฟล์
+                </button>
               </div>
-            ))}
-          </ul>
+            </form>
+            <div className="flex flex-col gap-2 px-4">
+              {filteredData.map((item, index) => (
+                <div
+                  key={item.id}
+                  className={`flex justify-between py-2 ${
+                    index !== filteredData.length - 1
+                      ? "border-b-[1.5px] border-[#A7A7A7]"
+                      : ""
+                  }`}
+                >
+                  <ol className="text-sm md:text-base">
+                    <li key={index + 1}> {`${index + 1}. ${item.name}`}</li>
+                  </ol>
+                  <div className="flex items-end gap-4">
+                    <div>
+                      <button
+                        className="w-full text-white font-bold text-sm md:text-base px-4 py-2 rounded-lg bg-[#FB8500] hover:bg-[#F28204]"
+                        onClick={(e) => handleDelete(e, item.id)}
+                      >
+                        ลบ
+                      </button>
+                    </div>
+                    <div>
+                      <button
+                        className="w-full text-white font-bold text-sm md:text-base px-4 py-2 rounded-lg bg-[#FB8500] hover:bg-[#F28204]"
+                        onClick={() => dataEdit(item.id)}
+                      >
+                        แก้ไขไฟล์
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       )}
     </>
