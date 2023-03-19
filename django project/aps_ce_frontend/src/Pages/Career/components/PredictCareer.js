@@ -69,9 +69,9 @@ const PredictCareer = () => {
               onChange={handleYearChange}
               className="w-full px-4 py-2 bg-white border border-grey-300 rounded-lg focus:bg-grey-200 focus:border-[#FB8500] focus:outline-none"
             >
-              <option value="2560">2560</option>
-              <option value="2561">2561</option>
-              <option value="2562">2562</option>
+              <option value="2560">2562</option>
+              <option value="2561">2563</option>
+              <option value="2562">2564</option>
             </select>
           </div>
         </div>

@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import PredictStudent from "./predictStudent";
 
-const ResultPredict = ({ predicts }) => {
+const ResultPredict = ({ year, predicts }) => {
   
   const [back, setBack] = useState(false);
 
@@ -39,7 +39,7 @@ const ResultPredict = ({ predicts }) => {
               </h1>
               <div className="container mx-auto rounded-lg drop-shadow-md bg-white px-4 py-8 space-y-6 w-full ">
                 <h1 className="text-xs md:text-base">
-                  คณะวิศวกรรมศาสตร์คอมพิวเตอร์ หลักสูตรปี 2560
+                  คณะวิศวกรรมศาสตร์คอมพิวเตอร์ หลักสูตรปี {year}
                 </h1>
                 <div className="container flex gap-6">
                   <div className="flex flex-col p-4 gap-4 w-[60%] rounded-lg drop-shadow-md bg-white">

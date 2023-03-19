@@ -79,7 +79,7 @@ const PredictStudent = () => {
                 <div className="flex items-end flex-wrap gap-8">
                   <div className="space-y-2 text-sm md:text-base w-full md:w-[25%]">
                     {/* เเถวที่ 1 : Dropdown*/}
-                    <label htmlFor="select-option">คณะ</label>
+                    <label htmlFor="select-option">หลักสูตร</label>
                     <select
                       id="select-year"
                       className="w-full px-4 py-2 bg-white border border-grey-300 rounded-lg focus:bg-grey-200 focus:border-[#FB8500] focus:outline-none"
@@ -95,15 +95,13 @@ const PredictStudent = () => {
                     </select>
                   </div>
                   <div className="space-y-2 text-sm md:text-base w-full md:w-[25%]">
-                    <label htmlFor="select-option">หลักสูตร</label>
+                    <label htmlFor="select-option">ปี</label>
                     <select
                       id="select-year"
                       className="w-full px-4 py-2 bg-white border border-grey-300 rounded-lg focus:bg-grey-200 focus:border-[#FB8500] focus:outline-none"
                       onChange={handleYearChange}
                       value={year}
                     >
-                      <option value="2560">2560</option>
-                      <option value="2561">2561</option>
                       <option value="2562">2562</option>
                       <option value="2563">2563</option>
                       <option value="2564">2564</option>

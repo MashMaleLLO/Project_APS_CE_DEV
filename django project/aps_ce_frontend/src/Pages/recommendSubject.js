@@ -50,7 +50,7 @@ const RecommendSubject = () => {
   return (
     <>
       {showSubjects ? (
-        <RecommendedSubjectsList subjects={subjects} />
+        <RecommendedSubjectsList subjects={subjects} year={year}/>
       ) : (
         <form onSubmit={handleSubmit}>
           <div className="flex flex-col h-full pb-20 2xl:min-h-screen">

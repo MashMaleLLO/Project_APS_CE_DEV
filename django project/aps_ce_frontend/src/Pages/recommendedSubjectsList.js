@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import RecommendSubject from "./recommendSubject.js";
 import RecommendModal from "../Component/recommendModal.js";
 
-const RecommendedSubjectsList = ({ subjects }) => {
+const RecommendedSubjectsList = ({ year , subjects}) => {
   const [back, setBack] = useState(false);
   const [selectedSubject, setSelectedSubject] = useState([]);
 
@@ -11,6 +11,7 @@ const RecommendedSubjectsList = ({ subjects }) => {
   console.log("subjectlists", subjects);
   console.log("kuay", selectedSubject);
   console.log("handleClick", handleClick);
+  console.log("year : ", year);
 
   return (
     <>
@@ -25,7 +26,7 @@ const RecommendedSubjectsList = ({ subjects }) => {
             {/* <h1>Recommended Subjects:</h1> */}
             <div className="container mx-auto flex flex-col rounded-lg drop-shadow-md bg-white px-8 py-8 space-y-6 w-full ">
               <h1 className="text-base md:text-lg font-medium">
-                วิชาเลือกภาคที่แนะนำ คณะวิศวกรรมคอมพิวเตอร์ หลักสูตร 2560
+                วิชาเลือกภาคที่แนะนำ คณะวิศวกรรมคอมพิวเตอร์ หลักสูตร {year}
               </h1>
 
               <div>

@@ -71,7 +71,6 @@ const PredictCareer = () => {
                   <option value="">ทั้งหมด</option>
                   <option value="2560">2560</option>
                   <option value="2561">2561</option>
-                  <option value="2562">2562</option>
                 </select>
               </div>
             </div>
