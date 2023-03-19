@@ -1,11 +1,11 @@
 import React from 'react';
 
-const index = () => {
+const AddButton = () => {
     return (
         <div>
-            dataUpload
+            
         </div>
     );
 };
 
-export default index;
+export default AddButton;

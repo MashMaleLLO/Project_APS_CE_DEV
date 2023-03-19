@@ -15,6 +15,8 @@ import Footer from "./Component/footer";
 import { theme } from "./Component/theme";
 import { ThemeProvider } from "@mui/material/styles";
 import Upload from "./Pages/Upload"
+import Test2 from "./Pages/Test2"
+
 
 function App() {
   return (
@@ -33,6 +35,7 @@ function App() {
           <Route path="/temp" element={<ModelList />} />
           <Route path="/careerUpdate" element={<CareerUpdate />} />
           <Route path="/Upload" element={<Upload />} />
+          <Route path="/Test2" element={<Test2 />} />
         </Routes>
       </div>
       <Footer />
