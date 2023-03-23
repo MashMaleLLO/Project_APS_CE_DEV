@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate, useParams } from "react-router-dom";
 
-const DataEdit = () => {
+const Test2 = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const [data, setData] = useState([]);
@@ -167,4 +167,4 @@ const Form = ({ label, initValue, handleSubmit }) => {
   );
 };
 
-export default DataEdit;
+export default Test2;

@@ -1,13 +1,20 @@
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 
-const Table = ({ rows, columns }) => {
+//use in file DataEdit
+const Table = ({ rows, columns, onRowClick, editable}) => {
   return (
     <DataGrid
-      rows={rows}
       columns={columns}
+      rows={rows}
       getRowId={(row) => row?.index}
       autoHeight={false}
       rowHeight={60}
+      experimentalFeatures={{ newEditingApi: true }}
+      onRowClick={handleRowClick}
+      editable={{
+        onEditCellChange: handleEditCellChange,
+        isCellEditable: () => true,
+      }}
       sx={{
         boxShadow:
           "0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.05)",

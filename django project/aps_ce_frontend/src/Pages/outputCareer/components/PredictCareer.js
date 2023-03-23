@@ -52,9 +52,6 @@ const PredictCareer = () => {
 
   return (
     <div>
-       {/* {loading ? (
-        <div><Loading/></div>
-      ) : ( */}
 
     <div className="flex flex-col items-center py-8">
       <div className="rounded-lg bg-white md:px-8">

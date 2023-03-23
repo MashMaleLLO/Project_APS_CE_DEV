@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { DataGrid } from "@mui/x-data-grid";
-import { useNavigate, useParams } from "react-router-dom";
-import { GridColDef, GridValueGetterParams } from "@mui/x-data-grid";
+import { DataGrid, GridCellModes } from "@mui/x-data-grid";
+import { useNavigate, useParams, GridColDef } from "react-router-dom";
 import { capitalize } from "@mui/material";
 import Table from "../Component/Table";
 import DeleteButton from "../Component/DeleteButton";
+import AddButton from "../Component/AddButton";
+import EditButton from "../Component/EditButton";
 
 const DataEdit = () => {
   const navigate = useNavigate();
@@ -26,8 +27,6 @@ const DataEdit = () => {
       index: index + 1,
     }));
     setData(rows);
-
-    // setData(response.data.message.file_content);
     setNameData(response.data.message.file_information.name);
   }
 
@@ -40,16 +39,13 @@ const DataEdit = () => {
   };
 
   const handleDelete = async (row) => {
-    if (window.confirm("คุณแน่ใจใช่ไหมว่าจะลบไฟล์")) {
-      await axios.put(`http://localhost:8000/editFileContent/` + id, {
-        action: "Delete",
-        index: data.indexOf(row),
-        content: {},
-      });
-
-      fetchData();
-      setSelectedRow(null);
-    }
+    await axios.put(`http://localhost:8000/editFileContent/` + id, {
+      action: "Delete",
+      index: data.indexOf(row),
+      content: {},
+    });
+    fetchData();
+    setSelectedRow(null);
   };
 
   const [isAddClicked, setIsAddClicked] = useState(false);
@@ -82,6 +78,23 @@ const DataEdit = () => {
 
   console.log("testdata", data);
 
+  const handleCellEditCommit = (params) => {
+    const updatedRows = [...data];
+    updatedRows[params.id - 1][params.field] = params.value;
+    setData(updatedRows);
+  
+    const editedRow = updatedRows[params.id - 1];
+    const editedFields = {
+      name: editedRow.name,
+      age: editedRow.age,
+      email: editedRow.email
+    };
+  
+    // pass the edited fields to handleEditFormSubmit
+    handleEditFormSubmit(event, editedFields);
+  };
+  
+
   const columns =
     data.length > 0
       ? [
@@ -94,21 +107,17 @@ const DataEdit = () => {
             field: "Action",
             width: 150,
             headerName: "Action",
+            editable: true,
             renderCell: (params) => {
               return (
                 <div className="flex flex-row space-x-4 items-center">
-                  <DeleteButton/>
-                  {/* {data.map((item, index) => (
-                    // <div key={index} onClick={() => handleRowClick(item)}>
-                    //   <button onClick={(e) => handleDelete(item)}>ลบ</button>
-                    // </div>
-                    <button onClick={(e) => handleDelete(item)}>ลบ</button>
-                  ))} */}
+                  {/* <EditButton onAdd={() => handleEditCellChange()} /> */}
+                  <DeleteButton onDelete={() => handleDelete(params.row)} />
+                  <button onClick={() =>  handleCellEditCommit(params)}>edit</button>
                 </div>
               );
             },
           },
-        
         ]
       : [];
 
@@ -173,10 +182,28 @@ const DataEdit = () => {
 
       <div className="flex flex-col h-full">
         <div className="container mx-auto py-8 px-8 md:px-32">
-          <h1 className="py-12 text-xl md:text-2xl font-bold">{nameData}</h1>
+          <div className="flex justify-between py-6">
+            <h1 className="text-xl md:text-2xl font-bold">{nameData}</h1>
+            <AddButton onAdd={() => handleAddFormSubmit()} />
+          </div>
 
           <div className="w-full h-[450px] xl:h-[600px] py-8">
-            <Table columns={columns} rows={data} />
+            {/* <Table
+              columns={columns}
+              rows={data}
+            /> */}
+            <DataGrid
+              rows={data}
+              columns={columns}
+              getRowId={(row) => row?.index}
+              autoHeight={false}
+              rowHeight={60}
+              pageSize={10}
+              checkboxSelection
+             // editRowsModel={editRowsModel}
+              onCellEditCommit={handleCellEditCommit}
+          
+            />
           </div>
         </div>
       </div>
