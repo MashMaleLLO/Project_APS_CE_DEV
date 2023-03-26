@@ -95,7 +95,7 @@ export default function Navbar() {
               sx={{ flexGrow: 1 }}
               onClick={dataUpload}
             >
-              กรอกอาชีพ
+              นักศึกษา
             </Button>
           ) } 
           {isLoggedIn ? (

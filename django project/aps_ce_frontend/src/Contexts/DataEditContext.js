@@ -1,4 +1,5 @@
-import { createContext, useState } from "react";
+import { createContext, useState, useCallback, useEffect } from "react";
+
 import { useParams } from "react-router-dom";
 import axios from "axios";
 
@@ -7,7 +8,9 @@ export const DataEditContext = createContext({
   data: [],
   isLoading: false,
   error: null,
-  fetchData: ()=> {}
+  fetchData: () => {},
+  selectedEditRow: null,
+  setSelectedEditRow: () => {},
 });
 
 export const DataEditProvider = ({ children }) => {
@@ -15,6 +18,8 @@ export const DataEditProvider = ({ children }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [dataName, setDataName] = useState();
+
+  const [selectedEditRow, setSelectedEditRow] = useState(null);
 
   const { id } = useParams();
 
@@ -26,7 +31,6 @@ export const DataEditProvider = ({ children }) => {
       );
       const data = response.data.message.file_content.map((row, index) => ({
         ...row,
-        index: index + 1,
       }));
       setIsLoading(false);
       setFetchedData(data);
@@ -43,7 +47,17 @@ export const DataEditProvider = ({ children }) => {
   }, [fetchData]);
 
   return (
-    <DataEditContext.Provider value={{ error, data, isLoading, dataName , fetchData }}>
+    <DataEditContext.Provider
+      value={{
+        error,
+        selectedEditRow,
+        setSelectedEditRow,
+        data,
+        isLoading,
+        dataName,
+        fetchData,
+      }}
+    >
       {children}
     </DataEditContext.Provider>
   );

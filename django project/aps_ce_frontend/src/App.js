@@ -14,6 +14,7 @@ import DataEdit from "./Pages/dataEdit";
 import GenModel from "./Pages/genModel";
 import ModelList from "./Pages/modelList";
 import CareerUpdate from "./Pages/updateStudentCareer";
+import Student from "./Pages/student";
 import Upload from "./Pages/Upload"
 import Test2 from "./Pages/Test2"
 
@@ -35,6 +36,7 @@ function App() {
           <Route path="/temp" element={<ModelList />} />
           <Route path="/careerUpdate" element={<CareerUpdate />} />
           <Route path="/Upload" element={<Upload />} />
+          <Route path="/Student" element={<Student />} />
           <Route path="/Test2" element={<Test2 />} />
         </Routes>
       </div>

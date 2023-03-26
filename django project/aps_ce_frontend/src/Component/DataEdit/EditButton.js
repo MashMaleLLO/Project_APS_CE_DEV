@@ -44,20 +44,6 @@ const EditButton = ({ editForm }) => {
       >
         <Box sx={style}>
           <div className="flex flex-col justify-between">
-            <div className="flex justify-between items-center">
-              <h2 id="modal-modal-title" className="text-xs md:text-base">
-                ehhr
-              </h2>
-              <p id="modal-modal-description" className="text-xs md:text-base">
-                รหัสวิชา
-              </p>
-            </div>
-            <p
-              id="modal-modal-description"
-              className="pt-6 text-xs md:text-base"
-            >
-              รายละเอียดวิชา
-            </p>
             <div className="flex justify-center items-end pt-6">
               <button
                 type="close"

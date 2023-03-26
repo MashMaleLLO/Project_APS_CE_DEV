@@ -1,14 +1,20 @@
-import { useContext, useCallback } from "react";
+import axios from "axios";
+import { useContext, useCallback, useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { DataEditContext } from "../Contexts/DataEditContext";
 
+
 const useAddData = () => {
   const addDataState = useContext(DataEditContext);
-  const { dataName, error, data, isLoading, fetchData } = addDataState;
+  const { data, fetchData } = addDataState;
   const { id } = useParams();
 
-  const [changedData, setChangedData] = useState(formObject);
-
+  const [changedData, setChangedData] = useState(data[0] || {});
+  useEffect(() => {
+    if (data?.[0]) {
+      setChangedData(data[0]);
+    }
+  }, [data]);
   const onChange = (event) => {
     setChangedData((old) => ({
       ...old,
@@ -17,16 +23,17 @@ const useAddData = () => {
   };
 
   const addData = useCallback(async () => {
+    const { index, ...rest } = changedData;
     await axios.put(
       `${process.env.REACT_APP_BACKEND_URL}/editFileContent/` + id,
       {
         action: "Add",
         index: "",
-        content: changedData,
+        content: rest,
       }
     );
 
-    fetchData();
+    await fetchData();
   });
 
   return { ...addDataState, addData, onChange };

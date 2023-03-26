@@ -5,7 +5,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { Dialog } from "@mui/material";
 
 //use in file dataEdit
-const DeleteButton = ( { onDelete } ) => {
+const DeleteButton = ({ onDelete }) => {
   
   const [open, setOpen] = useState(false);
 
