@@ -8,20 +8,21 @@ import DeleteButton from "../Component/DeleteButton";
 import AddButton from "../Component/AddButton";
 import EditButton from "../Component/EditButton";
 import AddForm from "../Component/AddForm";
+import DataTable from '../Component/DataEdit/DataTable'
+
+import { DataEditProvider } from '../Contexts/DataEditContext'
 
 const DataEdit = () => {
   const navigate = useNavigate();
   const { id } = useParams();
-  const [data, setData] = useState([]);
-  const [nameData, setNameData] = useState([]);
-  const [selectedRow, setSelectedRow] = useState(null);
-
+  // const [data, setData] = useState([]);
+  // const [nameData, setNameData] = useState([]);
   const addFormRef = useRef(null);
 
-  const dataUpload = () => {
-    let dataUpload = `/dataUpload`;
-    navigate(dataUpload);
-  };
+  // const dataUpload = () => {
+  //   let dataUpload = `/dataUpload`;
+  //   navigate(dataUpload);
+  // };
 
   // const fetchData = async () => {
   //   try {
@@ -42,10 +43,6 @@ const DataEdit = () => {
   //   fetchData();
   // }, []);
 
-  const handleRowClick = (row) => {
-    setSelectedRow(row);
-  };
-
   const handleDelete = async (row) => {
     await axios.put(`${process.env.REACT_APP_BACKEND_URL}/editFileContent/` + id, {
       action: "Delete",
@@ -53,61 +50,58 @@ const DataEdit = () => {
       content: {},
     });
     fetchData();
-    setSelectedRow(null);
   };
 
-  const [isAddClicked, setIsAddClicked] = useState(false);
-  const handleAddFormSubmit = async (event, content) => {
-    event.preventDefault();
-    await axios.put(`${process.env.REACT_APP_BACKEND_URL}/editFileContent/` + id, {
-      action: "Add",
-      index: "",
-      content: content,
-    });
+  // const [isAddClicked, setIsAddClicked] = useState(false);
+  // const handleAddFormSubmit = async (event, content) => {
+  //   event.preventDefault();
+  //   await axios.put(`${process.env.REACT_APP_BACKEND_URL}/editFileContent/` + id, {
+  //     action: "Add",
+  //     index: "",
+  //     content: content,
+  //   });
 
-    fetchData();
-    setSelectedRow(null);
-  };
+  //   fetchData();
+  // };
 
-  const getClearedObject = (data) =>
-    Object.fromEntries(Object.entries(data).map(([v]) => [v, ""]));
+  // const getClearedObject = (data) =>
+  //   Object.fromEntries(Object.entries(data).map(([v]) => [v, ""]));
 
-  const handleEditFormSubmit = async (event, content) => {
-    event.preventDefault();
-    await axios.put(`${process.env.REACT_APP_BACKEND_URL}/editFileContent/` + id, {
-      action: "Edit",
-      index: data.indexOf(),
-      content: content,
-    });
+  // const handleEditFormSubmit = async (event, content) => {
+  //   event.preventDefault();
+  //   await axios.put(`${process.env.REACT_APP_BACKEND_URL}/editFileContent/` + id, {
+  //     action: "Edit",
+  //     index: data.indexOf(),
+  //     content: content,
+  //   });
 
-    fetchData();
-    setSelectedRow(null);
-  };
+  //   fetchData();
+  // };
 
-  console.log("testdata", data);
+  // console.log("testdata", data);
 
-  const addForm = () => {
-    return (
-      <div className="bg-green-300 flex flex-col">
-        {isAddClicked ? (
-          <Form
-            label="Add"
-            initValue={getClearedObject(data[0])}
-            handleSubmit={handleAddFormSubmit}
-          />
-        ) : (
-          <button
-            type="button"
-            onClick={() => setIsAddClicked((old) => !old)}
-            className="text-white font-bold text-sm md:text-base px-4 py-2 rounded-lg bg-[#FB8500] hover:bg-[#F28204]"
-          >
-            เพิ่มข้อมูล
-          </button>
-        )}
-      </div>
-    );
-  };
-  console.log(addForm);
+  // const addForm = () => {
+  //   return (
+  //     <div className="bg-green-300 flex flex-col">
+  //       {isAddClicked ? (
+  //         <Form
+  //           label="Add"
+  //           initValue={getClearedObject(data[0])}
+  //           handleSubmit={handleAddFormSubmit}
+  //         />
+  //       ) : (
+  //         <button
+  //           type="button"
+  //           onClick={() => setIsAddClicked((old) => !old)}
+  //           className="text-white font-bold text-sm md:text-base px-4 py-2 rounded-lg bg-[#FB8500] hover:bg-[#F28204]"
+  //         >
+  //           เพิ่มข้อมูล
+  //         </button>
+  //       )}
+  //     </div>
+  //   );
+  // };
+  // console.log(addForm);
 
   const columns =
     data.length > 0
@@ -144,65 +138,55 @@ const DataEdit = () => {
       : [];
 
   return (
-    <>
+    <DataEditProvider>
       <div className="flex flex-col h-full">
-        {data && <AddForm formObject={data[0]} ref={addFormRef} />}
+        <AddForm ref={addFormRef} />
         <div className="container w-full mx-auto py-8 px-8 md:px-32">
           <div className="flex w-full justify-between py-6">
-            <h1 className="text-xl md:text-2xl font-bold">{nameData}</h1>
+            {/* <h1 className="text-xl md:text-2xl font-bold">{nameData}</h1> */}
             <AddButton onClick={() => addFormRef.current.open()} />
           </div>
 
-          <div className="w-full h-[450px] xl:h-[600px] py-8">
-            <DataGrid
-              rows={data}
-              columns={columns}
-              getRowId={(row) => row?.index}
-              autoHeight={false}
-              rowHeight={60}
-              pageSize={10}
-              checkboxSelection
-            />
-          </div>
+          <DataTable />
         </div>
       </div>
-    </>
+    </DataEditProvider>
   );
 };
 
-const Form = ({ label, initValue, handleSubmit }) => {
-  const [changedData, setChangedData] = useState(initValue);
+// const Form = ({ label, initValue, handleSubmit }) => {
+//   const [changedData, setChangedData] = useState(initValue);
 
-  const onChange = (event) => {
-    setChangedData((old) => ({
-      ...old,
-      [event.target.name]: event.target.value,
-    }));
-  };
+//   const onChange = (event) => {
+//     setChangedData((old) => ({
+//       ...old,
+//       [event.target.name]: event.target.value,
+//     }));
+//   };
 
-  return (
-    <form
-      className="p-2 flex flex-col items-start gap-y-1"
-      onSubmit={(e) => handleSubmit(e, changedData)}
-    >
-      <span className="text-xl font-bold">{label}</span>
-      {Object.entries(initValue).map(([key, value]) => (
-        <div key={key} className="flex items-center gap-x-2">
-          <span className="">{key}</span> :
-          <input
-            className="!border-1 border-grey-500 px-2 py-1 rounded-md"
-            type="text"
-            onChange={onChange}
-            name={key}
-            value={value.grade}
-          />
-        </div>
-      ))}
-      <button type="submit" className="border px-2">
-        Save
-      </button>
-    </form>
-  );
-};
+//   return (
+//     <form
+//       className="p-2 flex flex-col items-start gap-y-1"
+//       onSubmit={(e) => handleSubmit(e, changedData)}
+//     >
+//       <span className="text-xl font-bold">{label}</span>
+//       {Object.entries(initValue).map(([key, value]) => (
+//         <div key={key} className="flex items-center gap-x-2">
+//           <span className="">{key}</span> :
+//           <input
+//             className="!border-1 border-grey-500 px-2 py-1 rounded-md"
+//             type="text"
+//             onChange={onChange}
+//             name={key}
+//             value={value.grade}
+//           />
+//         </div>
+//       ))}
+//       <button type="submit" className="border px-2">
+//         Save
+//       </button>
+//     </form>
+//   );
+// };
 
 export default DataEdit;

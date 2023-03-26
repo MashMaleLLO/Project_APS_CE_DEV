@@ -1,10 +1,15 @@
 import { useState, useImperativeHandle, forwardRef } from "react";
 import { Modal, Box } from "@mui/material";
-import { useParams } from 'react-router-dom'
+import { useParams } from "react-router-dom";
 
 import axios from "axios";
+import useAddData from "../hooks/useAddData";
 
-const AddForm = forwardRef(({ formObject }, ref) => {
+const AddForm = forwardRef((_, ref) => {
+  const { data, addData, onChange } = useAddData();
+
+  if (!data) return null;
+
   const BoxStyle = {
     position: "absolute",
     top: "50%",
@@ -19,52 +24,33 @@ const AddForm = forwardRef(({ formObject }, ref) => {
   };
 
   const [isOpen, setIsOpen] = useState(false);
-  const { id } = useParams();
 
   useImperativeHandle(ref, () => ({
     open: () => {
-        console.log("set")
+      console.log("set");
       setIsOpen(true);
     },
     close: () => {
-        setIsOpen(false);
+      setIsOpen(false);
     },
-}));
+  }));
 
-  const [changedData, setChangedData] = useState(formObject);
-
-  const onChange = (event) => {
-    setChangedData((old) => ({
-      ...old,
-      [event.target.name]: event.target.value,
-    }));
-  };
-
-  const handleSubmit = async (event, content) => {
-    event.preventDefault();
-    await axios.put(`${process.env.REACT_APP_BACKEND_URL}/editFileContent/` + id, {
-      action: "Add",
-      index: "",
-      content: content,
-    });
-
-    // fetchData();
-    // setSelectedRow(null);
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    addData();
   };
 
   return (
-
     <Modal
       open={isOpen}
-      onClose={()=> setIsOpen(false)}
+      onClose={() => setIsOpen(false)}
       aria-labelledby="modal-modal-title"
       aria-describedby="modal-modal-description"
     >
-        <div>awdawdawdawdawdawdaad {isOpen ? "wadaw" : "dddd"}</div>
-      {/* <Box style={BoxStyle}>
+      <Box style={BoxStyle}>
         <form
           className="p-2 flex flex-col items-start gap-y-1"
-          onSubmit={(e) => handleSubmit(e, changedData)}
+          onSubmit={(e) => addData(e, changedData)}
         >
           {Object.entries(formObject).map(([key, value]) => (
             <div key={key} className="flex items-center gap-x-2">
@@ -81,7 +67,7 @@ const AddForm = forwardRef(({ formObject }, ref) => {
             Save
           </button>
         </form>
-      </Box> */}
+      </Box>
     </Modal>
   );
 });
