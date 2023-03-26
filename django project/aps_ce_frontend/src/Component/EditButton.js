@@ -7,7 +7,7 @@ import Button from "@mui/material/Button";
 import Modal from "@mui/material/Modal";
 
 //use in file dataEdit
-const EditButton = ({ onAdd }) => {
+const EditButton = ({ editForm }) => {
   const style = {
     position: "absolute",
     top: "50%",
@@ -26,7 +26,7 @@ const EditButton = ({ onAdd }) => {
   const handleClose = () => setOpen(false);
 
   const handleAdd = () => {
-    onAdd();
+    editForm();
     handleClose();
   };
 

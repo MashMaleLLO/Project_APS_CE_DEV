@@ -20,15 +20,20 @@ const DataEdit = () => {
     navigate(dataUpload);
   };
 
-  async function fetchData() {
-    const response = await axios.get(`http://localhost:8000/getFile/` + id);
-    const rows = response.data.message.file_content.map((row, index) => ({
-      ...row,
-      index: index + 1,
-    }));
-    setData(rows);
-    setNameData(response.data.message.file_information.name);
-  }
+  const fetchData = async () => {
+    try {
+      const response = await axios.get(`http://localhost:8000/getFile/` + id);
+      const data = response.data.message.file_content.map((row, index) => ({
+        ...row,
+        index: index + 1,
+      }));
+      setData(data);
+      setNameData(response.data.message.file_information.name);
+      console.log("Fetched data:", data);
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
   useEffect(() => {
     fetchData();
@@ -48,17 +53,17 @@ const DataEdit = () => {
     setSelectedRow(null);
   };
 
-  const [isAddClicked, setIsAddClicked] = useState(false);
+const [isAddClicked, setIsAddClicked] = useState(false);
   const handleAddFormSubmit = async (event, content) => {
     event.preventDefault();
     await axios.put(`http://localhost:8000/editFileContent/` + id, {
       action: "Add",
       index: "",
-      content,
+      content: content,
     });
 
     fetchData();
-    setIsAddClicked(false);
+    setSelectedRow(null);
   };
 
   const getClearedObject = (data) =>
@@ -68,7 +73,7 @@ const DataEdit = () => {
     event.preventDefault();
     await axios.put(`http://localhost:8000/editFileContent/` + id, {
       action: "Edit",
-      index: data.indexOf(selectedRow),
+      index: data.indexOf(),
       content: content,
     });
 
@@ -78,22 +83,29 @@ const DataEdit = () => {
 
   console.log("testdata", data);
 
-  const handleCellEditCommit = (params) => {
-    const updatedRows = [...data];
-    updatedRows[params.id - 1][params.field] = params.value;
-    setData(updatedRows);
-  
-    const editedRow = updatedRows[params.id - 1];
-    const editedFields = {
-      name: editedRow.name,
-      age: editedRow.age,
-      email: editedRow.email
-    };
-  
-    // pass the edited fields to handleEditFormSubmit
-    handleEditFormSubmit(event, editedFields);
+  const addForm = () => {
+    return (
+      <div className="bg-green-300 flex flex-col">
+                 {isAddClicked ? (
+              <Form
+                label="Add"
+                initValue={getClearedObject(data[0])}
+                handleSubmit={handleAddFormSubmit}
+              />
+            ) : (
+              <button
+                type="button"
+                onClick={() => setIsAddClicked((old) => !old)}
+                className="text-white font-bold text-sm md:text-base px-4 py-2 rounded-lg bg-[#FB8500] hover:bg-[#F28204]"
+              >
+                เพิ่มข้อมูล
+              </button>
+            )}
+       
+      </div>
+    );
   };
-  
+  console.log(addForm);
 
   const columns =
     data.length > 0
@@ -113,7 +125,9 @@ const DataEdit = () => {
                 <div className="flex flex-row space-x-4 items-center">
                   {/* <EditButton onAdd={() => handleEditCellChange()} /> */}
                   <DeleteButton onDelete={() => handleDelete(params.row)} />
-                  <button onClick={() =>  handleCellEditCommit(params)}>edit</button>
+                  {/* <EditButton onClick={() => handleAdd(params.row)}>
+                    edit
+                  </EditButton> */}
                 </div>
               );
             },
@@ -156,15 +170,14 @@ const DataEdit = () => {
             <tbody>
               {data.map((item, index) => (
                 <tr>
-
-                <td key={index} onClick={() => handleRowClick(item)}>
-                  {Object.keys(item).map((key) => (
-                    <td key={key}>{item[key]}</td>
-                  ))}
-                  <td className="">
-                    <button onClick={(e) => handleDelete(item)}>ลบ</button>
+                  <td key={index} onClick={() => handleRowClick(item)}>
+                    {Object.keys(item).map((key) => (
+                      <td key={key}>{item[key]}</td>
+                    ))}
+                    <td className="">
+                      <button onClick={(e) => handleDelete(item)}>ลบ</button>
+                    </td>
                   </td>
-                </td>
                 </tr>
               ))}
             </tbody>
@@ -184,7 +197,7 @@ const DataEdit = () => {
         <div className="container mx-auto py-8 px-8 md:px-32">
           <div className="flex justify-between py-6">
             <h1 className="text-xl md:text-2xl font-bold">{nameData}</h1>
-            <AddButton onAdd={() => handleAddFormSubmit()} />
+            <AddButton addForm={addForm} />
           </div>
 
           <div className="w-full h-[450px] xl:h-[600px] py-8">
@@ -200,9 +213,7 @@ const DataEdit = () => {
               rowHeight={60}
               pageSize={10}
               checkboxSelection
-             // editRowsModel={editRowsModel}
-              onCellEditCommit={handleCellEditCommit}
-          
+            
             />
           </div>
         </div>
@@ -235,7 +246,7 @@ const Form = ({ label, initValue, handleSubmit }) => {
             type="text"
             onChange={onChange}
             name={key}
-            value={value}
+            value={value.grade}
           />
         </div>
       ))}

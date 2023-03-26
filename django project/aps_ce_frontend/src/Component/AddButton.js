@@ -7,7 +7,7 @@ import Button from "@mui/material/Button";
 import Modal from "@mui/material/Modal";
 
 //use in file dataEdit
-const AddButton = ({ onAdd }) => {
+const AddButton = ({ addForm }) => {
   const style = {
     position: "absolute",
     top: "50%",
@@ -25,11 +25,11 @@ const AddButton = ({ onAdd }) => {
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
 
-  const handleAdd = () =>{
-    onAdd();
+  const handleAdd = () => {
+    addForm();
     handleClose();
-  }
-
+  };
+  
   
   return (
     <div>
@@ -49,31 +49,7 @@ const AddButton = ({ onAdd }) => {
         aria-describedby="modal-modal-description"
       >
         <Box sx={style}>
-          <div className="flex flex-col justify-between">
-            <div className="flex justify-between items-center">
-              <h2 id="modal-modal-title" className="text-xs md:text-base">
-                ehhr
-              </h2>
-              <p id="modal-modal-description" className="text-xs md:text-base">
-                รหัสวิชา 
-              </p>
-            </div>
-            <p
-              id="modal-modal-description"
-              className="pt-6 text-xs md:text-base"
-            >
-              รายละเอียดวิชา
-            </p>
-            <div className="flex justify-center items-end pt-6">
-              <button
-                type="close"
-                onClick={handleAdd}
-                className="w-[70px] text-white font-bold text-sm md:text-base px-4 py-2 rounded-lg bg-[#FB8500] hover:bg-[#F28204]"
-              >
-                ยืนยัน
-              </button>
-            </div>
-          </div>
+          {addForm()}
         </Box>
       </Modal>
     </div>
