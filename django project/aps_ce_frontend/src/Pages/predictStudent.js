@@ -33,7 +33,7 @@ const PredictStudent = () => {
     console.log(formData['path_to_csv']);
     async function fetchData() {
       setIsLoading(true);
-      let res = await axios.post("http://localhost:8000/reqPredict", formData);
+      let res = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/reqPredict`, formData);
       console.log(res.data);
       setPredicts(res.data);
       setShowPredicts(true);
@@ -46,7 +46,7 @@ const PredictStudent = () => {
     e.preventDefault();
     async function getfile() {
       let res = await axios
-        .post("http://localhost:8000/reqAna", {
+        .post(`${process.env.REACT_APP_BACKEND_URL}/reqAna`, {
           curriculum: curriculum,
           year: year,
           responseType: "blob",
@@ -67,7 +67,7 @@ const PredictStudent = () => {
   return (
     <>
       {showPredicts ? (
-        <ResultPredict predicts={predicts} />
+        <ResultPredict predicts={predicts} year={year}/>
       ) : (
         <div className="flex flex-col h-[calc(100vh-64px)] 2xl:h-[calc(100vh-128px)] justify-between">
           <div className="container mx-auto py-8 px-8 md:px-32">

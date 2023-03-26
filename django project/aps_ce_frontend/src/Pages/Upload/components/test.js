@@ -15,7 +15,7 @@ const Test2 = () => {
   };
 
   async function fetchData() {
-    const response = await axios.get(`http://localhost:8000/getFile/` + id);
+    const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/getFile/` + id);
     console.log(response.data);
     setData(response.data.message.file_content);
     setNameData(response.data.message.file_information.name);
@@ -31,7 +31,7 @@ const Test2 = () => {
 
   const handleDelete = async (row) => {
     if (window.confirm("คุณแน่ใจใช่ไหมว่าจะลบไฟล์")) {
-      await axios.put(`http://localhost:8000/editFileContent/` + id, {
+      await axios.put(`${process.env.REACT_APP_BACKEND_URL}/editFileContent/` + id, {
         action: "Delete",
         index: data.indexOf(row),
         content: {},
@@ -45,7 +45,7 @@ const Test2 = () => {
   const [isAddClicked, setIsAddClicked] = useState(false);
   const handleAddFormSubmit = async (event, content) => {
     event.preventDefault();
-    await axios.put(`http://localhost:8000/editFileContent/` + id, {
+    await axios.put(`${process.env.REACT_APP_BACKEND_URL}/editFileContent/` + id, {
       action: "Add",
       index: "",
       content,
@@ -60,7 +60,7 @@ const Test2 = () => {
 
   const handleEditFormSubmit = async (event, content) => {
     event.preventDefault();
-    await axios.put(`http://localhost:8000/editFileContent/` + id, {
+    await axios.put(`${process.env.REACT_APP_BACKEND_URL}/editFileContent/` + id, {
       action: "Edit",
       index: data.indexOf(selectedRow),
       content: content,

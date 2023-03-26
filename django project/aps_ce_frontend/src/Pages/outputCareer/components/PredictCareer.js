@@ -15,7 +15,7 @@ const PredictCareer = () => {
     setLoading(true);
     const fetchData = async () => {
       console.log("nunt 1")
-      const response = await axios.post("http://localhost:8000/req_pred_many",{
+      const response = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/req_pred_many`,{
         curriculum : "วิศวกรรมคอมพิวเตอร์",
         year : year
       });

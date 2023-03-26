@@ -15,7 +15,7 @@ const CareerUpdate = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     async function fetchData() {
-      let res = await axios.post("http://localhost:8000/studentUpdateCareer", formData);
+      let res = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/studentUpdateCareer`, formData);
       console.log(res.data);
     }
 

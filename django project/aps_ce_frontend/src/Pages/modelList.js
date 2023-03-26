@@ -7,7 +7,7 @@ export default class ModelList extends React.Component {
   }
 
   componentDidMount() {
-    axios.get(`http://localhost:8000/myModels`)
+    axios.get(`${process.env.REACT_APP_BACKEND_URL}/myModels`)
       .then(res => {
         const models = res.data;
         this.setState({ models });

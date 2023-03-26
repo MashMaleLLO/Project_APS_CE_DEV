@@ -17,7 +17,7 @@ const GenModel = () => {
       "pred" : e.target.pred.value
     }
     async function fetchData() {
-      let res = await axios.post("http://localhost:8000/getModel/" + e.target.curri.value, dat);
+      let res = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/getModel/` + e.target.curri.value, dat);
 
     }
 

@@ -7,51 +7,31 @@ import Button from "@mui/material/Button";
 import Modal from "@mui/material/Modal";
 
 //use in file dataEdit
-const AddButton = ({ addForm }) => {
+const AddButton = ({ onClick }) => {
   const style = {
-    position: "absolute",
-    top: "50%",
-    left: "50%",
-    transform: "translate(-50%, -50%)",
-    width: "70vw",
-    bgcolor: "background.paper",
-    boxShadow: 24,
-    p: 6,
-    display: "block",
-    borderRadius: "8px",
+    
   };
 
   const [open, setOpen] = useState(false);
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
 
-  const handleAdd = () => {
-    addForm();
-    handleClose();
-  };
+  // const handleAdd = () => {
+  //   addForm();
+  //   handleClose();
+  // };
   
   
   return (
     <div>
       <button
         type="button"
-        onClick={handleOpen}
+        onClick={onClick}
         className="text-white font-bold text-sm md:text-base px-4 py-2 rounded-lg bg-[#FB8500] hover:bg-[#F28204] cursor-pointer"
       >
         <AddIcon className="text-white"/>
         เพิ่มข้อมูล
       </button>
-
-      <Modal
-        open={open}
-        onClose={handleClose}
-        aria-labelledby="modal-modal-title"
-        aria-describedby="modal-modal-description"
-      >
-        <Box sx={style}>
-          {addForm()}
-        </Box>
-      </Modal>
     </div>
   );
 };

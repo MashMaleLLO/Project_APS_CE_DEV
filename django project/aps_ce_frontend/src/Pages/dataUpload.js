@@ -12,7 +12,7 @@ const DataUpload = () => {
   const navigate = useNavigate();
 
   async function fetchData() {
-    const response = await axios.get("http://localhost:8000/getFile");
+    const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/getFile`);
     setData(response.data.message);
   }
 
@@ -32,7 +32,7 @@ const DataUpload = () => {
     e.preventDefault();
     formData.append("type_data", JSON.stringify(dataType)); // append the JSON object to the form data
     await axios
-      .post("http://localhost:8000/fileUpload", formData, {
+      .post(`${process.env.REACT_APP_BACKEND_URL}/fileUpload`, formData, {
         headers: {
           "Content-Type": "multipart/form-data", // set the content type to multipart/form-data
         },
@@ -43,7 +43,7 @@ const DataUpload = () => {
       .catch((error) => {
         console.log(error);
       });
-    const response = await axios.get("http://localhost:8000/getFile");
+    const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/getFile`);
     setData(response.data.message);
   };
 
@@ -52,8 +52,8 @@ const DataUpload = () => {
     e.preventDefault();
     if (window.confirm("คุณแน่ใจใช่ไหมว่าจะลบไฟล์")) {
       async function fetchData() {
-        await axios.delete(`http://localhost:8000/getFile/` + id);
-        const response = await axios.get("http://localhost:8000/getFile");
+        await axios.delete(`${process.env.REACT_APP_BACKEND_URL}/getFile/` + id);
+        const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/getFile`);
         setData(response.data.message);
       }
       fetchData();

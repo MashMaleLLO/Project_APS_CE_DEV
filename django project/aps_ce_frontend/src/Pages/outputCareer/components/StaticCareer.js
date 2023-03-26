@@ -15,7 +15,7 @@ const PredictCareer = () => {
     setLoading(true);
     async function fetchData() {
       const response = await axios.get(
-        "http://localhost:8000/getCareerResult/"
+        `${process.env.REACT_APP_BACKEND_URL}/getCareerResult/`
       );
       setData(response.data.message);
       setLabels(Object.keys(response.data.message));

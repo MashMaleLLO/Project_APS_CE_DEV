@@ -27,7 +27,7 @@ const RecommendSubject = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const result = await axios.post("http://localhost:8000/recommendSubject", {
+    const result = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/recommendSubject`, {
       key: selectedSubjects,
       year: year,
     });
@@ -38,7 +38,7 @@ const RecommendSubject = () => {
 
   useEffect(() => {
     const fetchData = async () => {
-      const result = await axios.post("http://localhost:8000/keysubject", {
+      const result = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/keysubject`, {
         year: year,
       });
       setKeys(result.data);

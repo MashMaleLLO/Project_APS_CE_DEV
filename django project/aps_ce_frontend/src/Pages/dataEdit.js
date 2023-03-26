@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { DataGrid, GridCellModes } from "@mui/x-data-grid";
 import { useNavigate, useParams, GridColDef } from "react-router-dom";
@@ -7,6 +7,7 @@ import Table from "../Component/Table";
 import DeleteButton from "../Component/DeleteButton";
 import AddButton from "../Component/AddButton";
 import EditButton from "../Component/EditButton";
+import AddForm from "../Component/AddForm";
 
 const DataEdit = () => {
   const navigate = useNavigate();
@@ -15,36 +16,38 @@ const DataEdit = () => {
   const [nameData, setNameData] = useState([]);
   const [selectedRow, setSelectedRow] = useState(null);
 
+  const addFormRef = useRef(null);
+
   const dataUpload = () => {
     let dataUpload = `/dataUpload`;
     navigate(dataUpload);
   };
 
-  const fetchData = async () => {
-    try {
-      const response = await axios.get(`http://localhost:8000/getFile/` + id);
-      const data = response.data.message.file_content.map((row, index) => ({
-        ...row,
-        index: index + 1,
-      }));
-      setData(data);
-      setNameData(response.data.message.file_information.name);
-      console.log("Fetched data:", data);
-    } catch (error) {
-      console.error(error);
-    }
-  };
+  // const fetchData = async () => {
+  //   try {
+  //     const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/getFile/` + id);
+  //     const data = response.data.message.file_content.map((row, index) => ({
+  //       ...row,
+  //       index: index + 1,
+  //     }));
+  //     setData(data);
+  //     setNameData(response.data.message.file_information.name);
+  //     console.log("Fetched data:", data);
+  //   } catch (error) {
+  //     console.error(error);
+  //   }
+  // };
 
-  useEffect(() => {
-    fetchData();
-  }, []);
+  // useEffect(() => {
+  //   fetchData();
+  // }, []);
 
   const handleRowClick = (row) => {
     setSelectedRow(row);
   };
 
   const handleDelete = async (row) => {
-    await axios.put(`http://localhost:8000/editFileContent/` + id, {
+    await axios.put(`${process.env.REACT_APP_BACKEND_URL}/editFileContent/` + id, {
       action: "Delete",
       index: data.indexOf(row),
       content: {},
@@ -53,10 +56,10 @@ const DataEdit = () => {
     setSelectedRow(null);
   };
 
-const [isAddClicked, setIsAddClicked] = useState(false);
+  const [isAddClicked, setIsAddClicked] = useState(false);
   const handleAddFormSubmit = async (event, content) => {
     event.preventDefault();
-    await axios.put(`http://localhost:8000/editFileContent/` + id, {
+    await axios.put(`${process.env.REACT_APP_BACKEND_URL}/editFileContent/` + id, {
       action: "Add",
       index: "",
       content: content,
@@ -71,7 +74,7 @@ const [isAddClicked, setIsAddClicked] = useState(false);
 
   const handleEditFormSubmit = async (event, content) => {
     event.preventDefault();
-    await axios.put(`http://localhost:8000/editFileContent/` + id, {
+    await axios.put(`${process.env.REACT_APP_BACKEND_URL}/editFileContent/` + id, {
       action: "Edit",
       index: data.indexOf(),
       content: content,
@@ -86,22 +89,21 @@ const [isAddClicked, setIsAddClicked] = useState(false);
   const addForm = () => {
     return (
       <div className="bg-green-300 flex flex-col">
-                 {isAddClicked ? (
-              <Form
-                label="Add"
-                initValue={getClearedObject(data[0])}
-                handleSubmit={handleAddFormSubmit}
-              />
-            ) : (
-              <button
-                type="button"
-                onClick={() => setIsAddClicked((old) => !old)}
-                className="text-white font-bold text-sm md:text-base px-4 py-2 rounded-lg bg-[#FB8500] hover:bg-[#F28204]"
-              >
-                เพิ่มข้อมูล
-              </button>
-            )}
-       
+        {isAddClicked ? (
+          <Form
+            label="Add"
+            initValue={getClearedObject(data[0])}
+            handleSubmit={handleAddFormSubmit}
+          />
+        ) : (
+          <button
+            type="button"
+            onClick={() => setIsAddClicked((old) => !old)}
+            className="text-white font-bold text-sm md:text-base px-4 py-2 rounded-lg bg-[#FB8500] hover:bg-[#F28204]"
+          >
+            เพิ่มข้อมูล
+          </button>
+        )}
       </div>
     );
   };
@@ -110,6 +112,12 @@ const [isAddClicked, setIsAddClicked] = useState(false);
   const columns =
     data.length > 0
       ? [
+          {
+            field: "id",
+            headerName: "Index",
+            width: 150,
+            renderCell: (params) => params.row.index,
+          },
           ...Object.keys(data[0]).map((key) => ({
             field: key,
             headerName: key,
@@ -137,74 +145,15 @@ const [isAddClicked, setIsAddClicked] = useState(false);
 
   return (
     <>
-      {/* <div className="w-full">
-        <h1 className="py-12 text-xl md:text-2xl font-bold">{nameData}</h1>
-        <div className="flex flex-col mx-auto py-8 px-8 md:mb-20 md:px-32 xl:mb-36">
-          <div>
-            {isAddClicked ? (
-              <Form
-                label="Add"
-                initValue={getClearedObject(data[0])}
-                handleSubmit={handleAddFormSubmit}
-              />
-            ) : (
-              <button
-                type="button"
-                onClick={() => setIsAddClicked((old) => !old)}
-                className="text-white font-bold text-sm md:text-base px-4 py-2 rounded-lg bg-[#FB8500] hover:bg-[#F28204]"
-              >
-                เพิ่มข้อมูล
-              </button>
-            )}
-          </div>
-
-          <table className="border-collapse border border-slate-400">
-            <thead>
-              <tr>
-                <td className="border border-slate-300">
-                  {data.length > 0 &&
-                    Object.keys(data[0]).map((key) => <th key={key}>{key}</th>)}
-                </td>
-              </tr>
-            </thead>
-            <tbody>
-              {data.map((item, index) => (
-                <tr>
-                  <td key={index} onClick={() => handleRowClick(item)}>
-                    {Object.keys(item).map((key) => (
-                      <td key={key}>{item[key]}</td>
-                    ))}
-                    <td className="">
-                      <button onClick={(e) => handleDelete(item)}>ลบ</button>
-                    </td>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          {selectedRow && (
-            <Form
-              label={"Edit"}
-              initValue={selectedRow}
-              handleSubmit={handleEditFormSubmit}
-            />
-          )}
-          <button onClick={dataUpload}>กลับ</button>
-        </div>
-      </div> */}
-
       <div className="flex flex-col h-full">
-        <div className="container mx-auto py-8 px-8 md:px-32">
-          <div className="flex justify-between py-6">
+        {data && <AddForm formObject={data[0]} ref={addFormRef} />}
+        <div className="container w-full mx-auto py-8 px-8 md:px-32">
+          <div className="flex w-full justify-between py-6">
             <h1 className="text-xl md:text-2xl font-bold">{nameData}</h1>
-            <AddButton addForm={addForm} />
+            <AddButton onClick={() => addFormRef.current.open()} />
           </div>
 
           <div className="w-full h-[450px] xl:h-[600px] py-8">
-            {/* <Table
-              columns={columns}
-              rows={data}
-            /> */}
             <DataGrid
               rows={data}
               columns={columns}
@@ -213,7 +162,6 @@ const [isAddClicked, setIsAddClicked] = useState(false);
               rowHeight={60}
               pageSize={10}
               checkboxSelection
-            
             />
           </div>
         </div>
