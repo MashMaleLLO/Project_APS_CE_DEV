@@ -9,25 +9,6 @@ const ResultPredict = ({ year, predicts }) => {
 
   return (
     <>
-      {/* {back ? (
-        <PredictStudent />
-      ) : (
-        <div>
-          <h1>Result Predict:</h1>
-          <form onSubmit={() => setBack(true)}>
-            <ul>
-              {predicts.message.map((item,index) => (
-              <li key={index}>
-                {item.subject_id} - {item.sub_name}: {item.grade}
-              </li>
-            ))}
-            <li>Career: {career}</li>
-            </ul>
-            <button type="submit">Back to Predict</button>
-          </form>
-        </div>
-      )} */}
-
       {back ? (
         <PredictStudent />
       ) : (
