@@ -33,6 +33,8 @@ from sklearn.model_selection import GridSearchCV as gd_career
 from sklearn.model_selection import KFold
 from surprise.model_selection import GridSearchCV
 from sklearn.neighbors import KNeighborsClassifier
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics  import f1_score,accuracy_score
 from sklearn import preprocessing
 import numpy as np
 
@@ -705,18 +707,13 @@ def create_data_set_for_career(model, student_id, df, u_sub, job):
 
 
 def transpost_df(df):
-  lis_of_subClass = list(df['subject_class'].unique())
+  lis_of_subClass = list(df['subject_id'].unique())
   lis_of_student = list(df['student_id'].unique())
   sub = 0
   int_class = []
   for sub in range(len(lis_of_subClass)):
-    if lis_of_subClass[sub] == 'อื่นๆ':
-      pass
-    else:
-      int_class.append(int(lis_of_subClass[sub]))
-  int_class = sorted(int_class)
-  int_class.append('อื่นๆ')
-  lis_of_subClass = int_class
+    int_class.append(int(lis_of_subClass[sub]))
+  lis_of_subClass = sorted(int_class)
   col = ['student_id']
   col = col + lis_of_subClass
   col.append('career')
@@ -727,49 +724,44 @@ def transpost_df(df):
     grade_dic = {}
     for index, row in df_for_id.iterrows():
       stu_job = {'career' : row['career']}
-      if row['subject_class'] == 'อื่นๆ': 
-        un_int_class = {row['subject_class'] : row['grade']}
-      else:  
-        grade = {int(row['subject_class']) : row['grade']}
-        grade_dic.update(grade)
+      grade = {int(row['subject_id']) : row['grade']}
+      grade_dic.update(grade)
     grade_dic = dict(sorted(grade_dic.items()))
-    grade_dic.update(un_int_class)
     grade_dic.update(stu_job)
     mini_row.update(grade_dic)
     df_for_job = df_for_job.append(mini_row, ignore_index=True)
-  temp_df = df_for_job
-  df_for_job_train = temp_df.dropna()
-  return df_for_job_train
+  return df_for_job
 
 
 
 def train_career_model(df):
-  knn = KNeighborsClassifier()
-  params = {'n_neighbors': [3, 5, 7], 'weights': ['uniform', 'distance']}
-  kfold = KFold(n_splits=5, shuffle=True, random_state=42)
-  grid_search = gd_career(estimator=knn, param_grid=params, cv=kfold)
-  le = preprocessing.LabelEncoder()
-  y = df['career']
-  y = le.fit_transform(y)
-  print(y)
-  y_ins = le.inverse_transform(y)
-  print(y_ins)
-  encode_dic = {}
-  for i in range(len(y)):
-    dic = {y[i]:y_ins[i]}
-    encode_dic.update(dic)
-  X = df.drop(columns=['student_id','career'])
+  param_grid = {
+    'n_estimators': [50],
+    'max_features': ['log2'],
+    'max_depth': [10],
+    'min_samples_split': [5],
+    'min_samples_leaf': [1, 2, 4]
+  }
+  rf = RandomForestClassifier()
+  grid_search = gd_career(estimator=rf, param_grid=param_grid, cv=5)
+  df_for_career = df
+  y = df_for_career['career']
+  X = df_for_career.drop('career', axis=1)
   X_train, X_test, y_train, y_test = tt_split(X, y, test_size=0.1, random_state = 42)
   grid_search.fit(X_train, y_train)
-  best_knn = KNeighborsClassifier(n_neighbors=grid_search.best_params_['n_neighbors'], 
-                                 weights=grid_search.best_params_['weights'])
-  best_knn.fit(X_train, y_train)
-  test_score = best_knn.score(X_test, y_test)
-  accuracy = test_score
+  best_rf = RandomForestClassifier(n_estimators=grid_search.best_params_['n_estimators'], 
+                                 max_features=grid_search.best_params_['max_features'],
+                                 max_depth=grid_search.best_params_['max_depth'],
+                                 min_samples_split=grid_search.best_params_['min_samples_split'],
+                                 min_samples_leaf=grid_search.best_params_['min_samples_leaf'])
+  best_rf.fit(X_train, y_train)
+  y_pred = best_rf.predict(X_test)
+  accuracy = accuracy_score(y_test, y_pred)
+  dataset_cols = X.columns.to_list()
   model = {
     "accuracy" : round(accuracy, 2),
-    "model" : best_knn,
-    "encode_dict": encode_dic
+    "model" : best_rf,
+    "train_set_cols": dataset_cols
   }
   return model
 
@@ -786,26 +778,21 @@ def create_career_model(request, name = 'Model_career', curriculum = 'วิศ�
       year = body['year']
     pre_avg_data = generate_data_set(curriculum, year)
     this_model_curri_year = pre_avg_data.loc[0, "curriculum_year"]
-    group_query = "select student_id, subject_class, round(avg(grade), 2) as grade, career from pre_avg_data group by subject_class, student_id order by student_id"
-    avg_data = sqldf(group_query)
-    model_career = train_sim_model_career(avg_data)
-    subject_id_uni = avg_data["subject_class"].unique().tolist()
-    student_id_uni = avg_data['student_id'].unique().tolist()
-    final_df = pd.DataFrame(columns=['student_id', 'subject_class', 'grade', 'career'])
-    for i in student_id_uni:
-      this_user_job = avg_data.loc[avg_data['student_id'] == i, 'career'].values[0]
-      df_temp = create_data_set_for_career(model_career['model'], i, avg_data, subject_id_uni, this_user_job)
-      final_df = pd.concat([final_df, df_temp])
-    final_df = pd.concat([avg_data, final_df])
-    trans_df = transpost_df(final_df)
+    trans_df = transpost_df(pre_avg_data)
+    trans_df = trans_df.fillna(99)
     trans_df = trans_df[trans_df["career"] != 'Zero']
+    job = trans_df['career']
+    trans_df = trans_df.drop('student_id', axis=1)
+    trans_df = trans_df.drop('career', axis=1)
+    trans_df = trans_df.astype(float)
+    trans_df['career'] = job.to_list() 
     try:
       career_model = train_career_model(trans_df)
     except:
       res = {"message" : "Error in model training process", "status" : status.HTTP_400_BAD_REQUEST}
       return JsonResponse(res, safe=False)
     print(career_model)
-    career_model = CareerModel(name = name, curriculum = curriculum, year = this_model_curri_year, accuracy = career_model['accuracy'], encode_class = career_model['encode_dict'],career_model = career_model['model'])
+    career_model = CareerModel(name = name, curriculum = curriculum, year = this_model_curri_year, accuracy = career_model['accuracy'], train_set_cols = career_model['train_set_cols'],career_model = career_model['model'])
     career_model.save()
     res = {"message": f'Complete creating career model name : {name} curriculum : {curriculum}'}
   else:
@@ -824,7 +811,7 @@ def reqPredictPerUser_Production(df_user, student_id = 'Optional', curriculum = 
     all_career_model = list(CareerModel.objects.filter(curriculum = curriculum).values()) ##
     all_career_model = all_career_model[-1] ##
     career_model = all_career_model['career_model']  ##
-    encode_class = all_career_model['encode_class'] ##
+    train_set_cols = all_career_model['train_set_cols'] ##
     df_user = transfromGrade(df_user)
     main_data_set = generate_data_set(curriculum, year)
     selected_values = df_user.query("Want_To_Predict == '?'")['subject_id'].tolist()
@@ -832,22 +819,24 @@ def reqPredictPerUser_Production(df_user, student_id = 'Optional', curriculum = 
     df_user_career = df_user ##
     df_user_career['career'] = np.nan ##
     df_user_career['career'] = df_user_career['career'].fillna('Zero') ##
-    q_join_user_subclass = 'select df_user_career.student_id, sub_data_df.subject_class, round(avg(df_user_career.grade), 2) as grade, df_user_career.career from df_user_career left join sub_data_df on df_user_career.subject_id = sub_data_df.subject_id group by subject_class' ##
-    df_user_career = sqldf(q_join_user_subclass) ##
-    df_user_career['subject_class'] = df_user_career['subject_class'].fillna('อื่นๆ') ##
-    group_query = "select student_id, subject_class, round(avg(grade), 2) as grade, career from main_data_set group by subject_class, student_id order by student_id" ##
-    avg_data = sqldf(group_query) ##
-    df_con_user_data_set = pd.concat([avg_data, df_user_career]) ##
-    model_career_sim = train_sim_model_career(df_con_user_data_set) ##
-    df_filtered_user = df_con_user_data_set[df_con_user_data_set['student_id'] == 'Optional'] ##
-    subject_id_uni = df_con_user_data_set["subject_class"].unique().tolist() ##
-    this_user_job = df_filtered_user.loc[df_filtered_user['student_id'] == student_id, 'career'].values[0] ##
-    df_user_full_grade = create_data_set_for_career(model_career_sim['model'], student_id, df_con_user_data_set, subject_id_uni, this_user_job) ##
-    df_user_full_grade = pd.concat([df_filtered_user, df_user_full_grade]) ##
-    df_user_full_grade = transpost_df(df_user_full_grade) ##
-    df_user_career_for_test = df_user_full_grade ##
-    df_user_career_for_test = df_user_career_for_test.drop(columns=['student_id','career']) ##
-    this_user_career = encode_class[int(career_model.predict(df_user_career_for_test)[0])] ##
+    user_sub = list(df_user_career['subject_id'].unique()) ##
+    user_sub_int = [int(element) for element in user_sub] ##
+    not_valid_sub = []
+    for j in user_sub:
+      if int(j) not in train_set_cols:
+        not_valid_sub.append(j)
+    for k in not_valid_sub:
+      df_user_career = df_user_career[df_user_career['subject_id'] != k]
+    ungrade_sub = list(set(train_set_cols)-set(user_sub_int))
+    for i in ungrade_sub:
+      new = pd.DataFrame({"student_id": ['Optional'],"subject_id": [i]})
+      df_user_career = pd.concat([df_user_career, new], ignore_index=True)
+    df_user_career = transpost_df(df_user_career) ##
+    df_user_career = df_user_career ##
+    df_user_career_for_test = df_user_career.drop(columns=['student_id','career']) ##
+    df_user_career_for_test = df_user_career_for_test.fillna(99)
+    df_user_career_for_test = df_user_career_for_test.astype(float)
+    pred_result_career = career_model.predict(df_user_career_for_test)[0]
     subId_name = {row['subject_id']:row['subject_name_eng'] for row in Subject_Data.objects.values()}
     full_data_set_for_pred_grade = pd.concat([main_data_set, df_user], axis=0)
     model_grade_pred = train_rec_model(full_data_set_for_pred_grade)
@@ -857,7 +846,7 @@ def reqPredictPerUser_Production(df_user, student_id = 'Optional', curriculum = 
         if i['subject_id'] in subId_name:
             dic = {"subject_id" : i['subject_id'], "sub_name" : subId_name[i['subject_id']], "grade" : round(i['grade'], 2)}
             response_grade.append(dic)
-    response_grade.append(str(this_user_career))
+    response_grade.append(str(pred_result_career))
     return response_grade
 
 @csrf_exempt
@@ -914,46 +903,46 @@ def reqPredict_career_manyUser(request, curriculum = 'วิศวกรรม�
       curri_year = curri_year - 1
     curri_year = str(curri_year)
     try:
-      model_rec = list(SurpriseModel.objects.filter(curriculum = curriculum, year = curri_year).values())[-1]
+      # model_rec = list(SurpriseModel.objects.filter(curriculum = curriculum, year = curri_year).values())[-1]
       model_career = list(CareerModel.objects.filter(curriculum = curriculum, year = curri_year).values())[-1]
     except:
       res = {"message" : "Can't find model that suite your request", "status" : status.HTTP_400_BAD_REQUEST}
       return JsonResponse(res, safe=False)
-    encode_class = model_career['encode_class']
+    train_set_cols = model_career['train_set_cols']
     career_model = model_career['career_model']
-    student_data = pd.DataFrame(list(Student_Data.objects.all().values()))
-    student_grade = pd.DataFrame(list(Student_Grade.objects.all().values()))
-    subject_data = pd.DataFrame(list(Subject_Data.objects.filter(year = curri_year).values()))
-    student_grade = transfromGrade(student_grade)
-    q_join_grade = "select student_grade.student_id, student_grade.subject_id, student_grade.grade, student_data.curriculum, student_data.curriculum_year, student_data.start_year, student_data.career from student_grade left join student_data on student_grade.student_id = student_data.student_id"
-    dataset = sqldf(q_join_grade)
-    q_join_subject = "select dataset.student_id, subject_data.subject_class, dataset.grade, dataset.curriculum, dataset.curriculum_year, dataset.start_year, dataset.career from dataset left join subject_data on dataset.subject_id = subject_data.subject_id"
-    dataset = sqldf(q_join_subject)
-    dataset = dataset[dataset['grade'] != 'nan']
-    q_avg = "select dataset.student_id, dataset.subject_class, round(avg(dataset.grade),2) as grade, dataset.curriculum, dataset.curriculum_year, dataset.start_year, dataset.career from dataset group by dataset.subject_class, dataset.student_id"
-    dataset = sqldf(q_avg)
-    dataset['subject_class'] = dataset['subject_class'].fillna('อื่นๆ')
-    dataset = dataset.loc[(dataset['curriculum'] == curriculum) & (dataset['curriculum_year'] == curri_year)]
-    all_user_by_year = dataset.loc[(dataset['curriculum'] == curriculum) & (dataset['start_year'] == start_year)]
-    all_user_by_year = all_user_by_year[['student_id', 'subject_class', 'grade', 'career']]
-    student_id_year_uni = all_user_by_year['student_id'].unique().tolist()
-    subject_uni = dataset['subject_class'].unique().tolist()
-    predict_career_dataset = pd.DataFrame(columns=['student_id', 'subject_class', 'grade'])
-    print(all_user_by_year)
-    for i in student_id_year_uni:
-      df_temp = create_data_set_for_career(model_rec['rec_model'], i, dataset, subject_uni, 'Zero')
-      predict_career_dataset = pd.concat([predict_career_dataset, df_temp])
-    predict_career_dataset = pd.concat([all_user_by_year, predict_career_dataset])
-    transpost_grade = transpost_df(predict_career_dataset)
-    transpost_grade = transpost_grade.drop(columns=['student_id','career'])
-    pred_result = career_model.predict(transpost_grade)
+    s_data = pd.DataFrame(list(Student_Data.objects.all().values()))
+    s_grade = pd.DataFrame(list(Student_Grade.objects.all().values()))
+    join_q = "select s_grade.student_id, s_grade.subject_id, s_grade.grade, s_data.career, s_data.curriculum, s_data.status, s_data.curriculum_year, s_data.start_year from s_grade left join s_data on s_grade.student_id = s_data.student_id where s_grade.subject_id NOT LIKE '90%'"
+    dataset = sqldf(join_q)
+    dataset = dataset.loc[(dataset['grade'] != 'Zero') & (dataset['grade'] != 'nan') & (dataset['curriculum'] == curriculum) & (dataset['curriculum_year'] == curri_year)]
+    dataset = dataset[dataset['start_year'] == start_year]
+    dataset = dataset[dataset['career'] == 'Zero']
+    unique_sub_by_year = [int(element) for element in list(dataset['subject_id'].unique())]
+    for i in unique_sub_by_year:
+      if i not in train_set_cols:
+        if len(str(i)) == 7:
+          a = '0' + str(i) 
+        dataset = dataset[dataset['subject_id'] != a]
+    unique_sub_by_year = [int(element) for element in list(dataset['subject_id'].unique())]
+    un_assign_sub = list(set(train_set_cols) - set(unique_sub_by_year))
+    dataset = dataset[['student_id', 'subject_id', 'grade', 'career']]
+    dataset = transfromGrade(dataset)
+    for i in un_assign_sub:
+      new = pd.DataFrame({"student_id": ['temp'], "subject_id": [i]})
+      dataset = pd.concat([dataset, new], ignore_index=True)
+    dataset = transpost_df(dataset)
+    dataset = dataset[dataset['student_id'] != 'temp']
+    dataset = dataset.drop(columns=['student_id','career'])
+    dataset = dataset.fillna(99)
+    dataset = dataset.astype(float)
+    pred_result = career_model.predict(dataset)
     response = {}
     for j in pred_result:
       lis_key = list(response.keys())
-      if encode_class[int(j)] in lis_key:
-        response[encode_class[int(j)]]['Num_of_student'] += 1
+      if j in lis_key:
+        response[j]['Num_of_student'] += 1
       else:
-        dic = {encode_class[int(j)] : {"Year" : start_year, "Num_of_student" : 1}}
+        dic = {j : {"Year" : start_year, "Num_of_student" : 1}}
         response.update(dic)
     res = {"message" : response, "status" : status.HTTP_200_OK}
   else:
