@@ -33,7 +33,6 @@ export default function Navbar() {
   };
 
   const isLoggedIn = localStorage.getItem("isLoggedIn") === "true";
-  const role = localStorage.getItem("role") === "kammakan";
 
   const handleLogout = () => {
     if (window.confirm("Are you sure you want to log out?")) {
@@ -78,7 +77,7 @@ export default function Navbar() {
           >
             แนะนำวิชาเลือก
           </Button>
-          {isLoggedIn && role && (
+          {isLoggedIn &&(
             <Button
               variant="h1"
               component="div"
@@ -86,16 +85,6 @@ export default function Navbar() {
               onClick={dataUpload}
             >
               อัพโหลดไฟล์
-            </Button>
-          ) } 
-          {isLoggedIn && !role && (
-            <Button
-              variant="h1"
-              component="div"
-              sx={{ flexGrow: 1 }}
-              onClick={dataUpload}
-            >
-              นักศึกษา
             </Button>
           ) } 
           {isLoggedIn ? (

@@ -1,10 +1,9 @@
-// import { useState, useEffect } from "react";
 import React from "react";
-// import axios from "axios";
+import Home from "./home.js";
 
 const HomePage = () => {
   return(
-    <h1>home</h1>
+    <Home></Home>
   )
 };
 

@@ -6,7 +6,6 @@ import { Dialog } from "@mui/material";
 
 //use in file dataEdit
 const DeleteButton = ({ onDelete }) => {
-  
   const [open, setOpen] = useState(false);
 
   const handleClickOpen = () => {
@@ -21,7 +20,6 @@ const DeleteButton = ({ onDelete }) => {
     onDelete();
     handleClose();
   };
-
 
   return (
     <div>
