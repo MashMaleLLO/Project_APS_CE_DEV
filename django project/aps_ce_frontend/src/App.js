@@ -15,9 +15,11 @@ import GenModel from "./Pages/genModel";
 import ModelList from "./Pages/modelList";
 import CareerUpdate from "./Pages/updateStudentCareer";
 import Student from "./Pages/student";
+import ProtectedRoute from "./Pages/protectedRoute";
 
 
 function App() {
+  const isLoggedIn = localStorage.getItem("isLoggedIn") === "true";
   return (
     <ThemeProvider theme={theme}>
       <div>
@@ -28,7 +30,7 @@ function App() {
           <Route path="/outputCareer" element={<OutputCareer />} />
           <Route path="/predictStudent" element={<PredictStudent />} />
           <Route path="/recommendSubject" element={<RecommendSubject />} />
-          <Route path="/dataUpload" element={<DataUpload />} />
+          <Route path="/dataUpload" element={<ProtectedRoute><DataUpload /></ProtectedRoute>} />
           <Route path="/dataEdit/:id" element={<DataEdit />} />
           <Route path="/genModel" element={<GenModel />} />
           <Route path="/temp" element={<ModelList />} />
