@@ -943,7 +943,7 @@ def reqPredict_career_manyUser(request, curriculum = 'วิศวกรรม�
     career_counts = defaultdict(int)
     for prob in pred_prob:
       sub_career_dict = dict(zip(career_list, prob))
-      sub_career_dict = dict(sorted(prob.items(), key=lambda x: x[1], reverse=True))
+      sub_career_dict = dict(sorted(sub_career_dict.items(), key=lambda x: x[1], reverse=True))
       top_careers = list(sub_career_dict.keys())[:2]
       for career in top_careers:
         career_counts[career] += 1
