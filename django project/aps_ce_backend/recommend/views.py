@@ -11,6 +11,7 @@ from rest_framework.parsers import JSONParser
 from django.db.models import Q
 from datetime import date
 from sklearn.metrics.pairwise import cosine_similarity
+from collections import defaultdict
 # Create your views here.
 
 
@@ -935,15 +936,30 @@ def reqPredict_career_manyUser(request, curriculum = 'วิศวกรรม�
     dataset = dataset.drop(columns=['student_id','career'])
     dataset = dataset.fillna(99)
     dataset = dataset.astype(float)
-    pred_result = career_model.predict(dataset)
+    # pred_result = career_model.predict(dataset)
+    career_list = career_model.classes_
+    pred_prob = career_model.predict_proba(dataset)
+    pred_prob = pred_prob.tolist()
+    career_counts = defaultdict(int)
+    for prob in pred_prob:
+      sub_career_dict = dict(zip(career_list, prob))
+      sub_career_dict = dict(sorted(prob.items(), key=lambda x: x[1], reverse=True))
+      top_careers = list(sub_career_dict.keys())[:2]
+      for career in top_careers:
+        career_counts[career] += 1
+    career_counts = dict(career_counts)
     response = {}
-    for j in pred_result:
-      lis_key = list(response.keys())
-      if j in lis_key:
-        response[j]['Num_of_student'] += 1
-      else:
-        dic = {j : {"Year" : start_year, "Num_of_student" : 1}}
-        response.update(dic)
+    lis_key = list(career_counts.keys())
+    for car in lis_key:
+      dic = {car : {"Year" : start_year, "Num_of_student" : career_counts[car]}}
+      response.update(dic)
+    # for j in pred_result:
+    #   lis_key = list(response.keys())
+    #   if j in lis_key:
+    #     response[j]['Num_of_student'] += 1
+    #   else:
+    #     dic = {j : {"Year" : start_year, "Num_of_student" : 1}}
+    #     response.update(dic)
     res = {"message" : response, "status" : status.HTTP_200_OK}
   else:
     res = {"message": "Method not match.", "status": status.HTTP_400_BAD_REQUEST}
