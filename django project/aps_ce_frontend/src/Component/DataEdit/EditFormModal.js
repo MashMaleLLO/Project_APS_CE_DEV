@@ -46,6 +46,7 @@ const EditFormModal = forwardRef((_, ref) => {
                     onChange={onChange}
                     name={key}
                     defaultValue={value}
+                    required
                   />
                 </div>
               )

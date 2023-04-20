@@ -56,6 +56,7 @@ const AddFormModal = forwardRef((_, ref) => {
                       type="text"
                       onChange={onChange}
                       name={key}
+                      required
                     />
                   </div>
                 </div>
