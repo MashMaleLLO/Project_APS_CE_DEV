@@ -69,7 +69,6 @@ const PredictCareer = () => {
                   className="w-full px-4 py-2 bg-white border border-grey-300 rounded-lg focus:bg-grey-200 focus:border-[#FB8500] focus:outline-none"
                 >
                   <option value="">ทั้งหมด</option>
-                  <option value="2560">2560</option>
                   <option value="2561">2561</option>
                 </select>
               </div>

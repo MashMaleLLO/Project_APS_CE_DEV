@@ -10,6 +10,7 @@ const PredictStudent = () => {
   const [predicts, setPredicts] = useState([]);
   const [showPredicts, setShowPredicts] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState(null);
 
   const handleYearChange = (e) => {
     setYear(e.target.value);
@@ -24,19 +25,33 @@ const PredictStudent = () => {
   }
 
   const handleChange = (e) => {
-    if (e.currentTarget.files) setCsvFile(e.currentTarget.files[0]);
+    if (e.currentTarget.files) {
+      setCsvFile(e.currentTarget.files[0]);
+      setErrorMessage(null);
+    }
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    if (!csvFile) {
+      setErrorMessage('กรุณาอัปโหลดไฟล์ก่อน');
+      return 
+    }
+      
+    setErrorMessage(null)
     // console.log(e.target.model.value);
     console.log(formData['path_to_csv']);
     async function fetchData() {
       setIsLoading(true);
-      let res = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/reqPredict`, formData);
-      console.log(res.data);
-      setPredicts(res.data);
-      setShowPredicts(true);
+      try {
+        let res = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/reqPredict`, formData);
+        console.log(res.data);
+        setPredicts(res.data);
+        setShowPredicts(true);
+      }
+      catch (error) {
+        setErrorMessage('ไฟล์ไม่ถูกต้อง กรุณาตรวจสอบไฟล์')
+      }
       setIsLoading(false);
     }
     fetchData();
@@ -169,9 +184,10 @@ const PredictStudent = () => {
                         พยากรณ์
                       </button>
                     </div>
-                  )}
+                    )}
                 </div>
               </form>
+              {errorMessage && <div style={{ color: "red", marginTop: 0 }}>{errorMessage}</div>}
             </div>
           </div>
         </div>

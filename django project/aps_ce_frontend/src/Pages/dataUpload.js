@@ -9,6 +9,7 @@ const DataUpload = () => {
   const [data, setData] = useState([]);
   const [pageStudentData, setPageStudentData] = useState(false);
   const [filteredData, setFilteredData] = useState([]);
+  const [errorMessage, setErrorMessage] = useState(null);
   const navigate = useNavigate();
 
   async function fetchData() {
@@ -25,11 +26,18 @@ const DataUpload = () => {
   }
 
   const handleChange = (e) => {
-    if (e.currentTarget.files) setCsvFile(e.currentTarget.files[0]);
+    if (e.currentTarget.files) {
+      setCsvFile(e.currentTarget.files[0]);
+      setErrorMessage(null);
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!csvFile) {
+      setErrorMessage("กรุณาเลือกไฟล์");
+      return;
+    }
     formData.append("type_data", JSON.stringify(dataType)); // append the JSON object to the form data
     await axios
       .post(`${process.env.REACT_APP_BACKEND_URL}/fileUpload`, formData, {
@@ -135,6 +143,7 @@ const DataUpload = () => {
                 </button>
               </div>
             </form>
+            {errorMessage && <div style={{ color: "red", marginTop: 0 }}>{errorMessage}</div>}
             <div className="flex flex-col gap-2 px-4">
               {filteredData.map((item, index) => (
                 <div
@@ -194,7 +203,8 @@ const DataUpload = () => {
                   อัพโหลดไฟล์
                 </button>
               </div>
-            </form>
+              </form>
+              {errorMessage && <div style={{ color: "red", marginTop: 0 }}>{errorMessage}</div>}
             <div className="flex flex-col gap-2 px-4">
               {filteredData.map((item, index) => (
                 <div

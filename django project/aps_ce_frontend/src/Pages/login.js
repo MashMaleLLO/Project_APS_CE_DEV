@@ -20,7 +20,8 @@ const Login = () => {
         password,
       });
       const { data } = response;
-      if (data.message) {
+      console.log(data.message);
+      if (data.status == 200) {
         localStorage.setItem("isLoggedIn", true);
         navigate(`/`);
       } else {
@@ -50,6 +51,7 @@ const Login = () => {
               <div className="space-y-2">
                 <span className="text-base md:text-lg">ชื่อผู้ใช้งาน</span>
                 <input
+                  required
                   type="username"
                   value={username}
                   className="w-full px-4 py-2 bg-white border border-grey-300 rounded-lg focus:bg-grey-200 focus:border-[#FB8500] focus:outline-none"
@@ -60,6 +62,7 @@ const Login = () => {
               <div className="space-y-2">
                 <span className="text-base md:text-lg">รหัสผ่าน</span>
                 <input
+                  required
                   type="password"
                   value={password}
                   className="w-full px-4 py-2 bg-white border border-grey-300 rounded-lg focus:bg-grey-200 focus:border-[#FB8500] focus:outline-none"
